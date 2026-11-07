@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+.agents/memory/global_memory.json
+# Retained locally from the original private chat-analytics prototype.
+.agents/memory/global_memory_scanner.py
+.agents/memory/visualizer_3d.py
