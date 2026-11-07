@@ -1,0 +1,194 @@
+{
+  "schema_version": 2,
+  "project": {
+    "name": "Antigravity_memeory",
+    "description": "Portable project memory for AI coding agents. It indexes repository structure, preserves decisions and tasks, and generates compact context so agents avoid repeated full-project exploration.",
+    "root": ".",
+    "created_at": "2026-10-05",
+    "last_scanned": "2026-11-07T15:46:32+05:30",
+    "tech_stack": [
+      "Python"
+    ]
+  },
+  "summary": {
+    "file_count": 15,
+    "total_bytes": 75975,
+    "scan_truncated": false,
+    "changes": {
+      "added": [],
+      "changed": [
+        "README.md",
+        "install_project_memory.py"
+      ],
+      "removed": []
+    }
+  },
+  "architecture": {
+    "overview": "A dependency-free Python memory engine indexes project metadata, preserves human-approved tasks and decisions, generates compact Markdown context for agents, and produces an offline HTML dashboard. Agent instruction files integrate the same workflow with Codex and Antigravity/Gemini.",
+    "modules": [
+      {
+        "name": ".agents",
+        "file_count": 9,
+        "sample_files": [
+          ".agents/hooks.json",
+          ".agents/memory/global_memory_scanner.py",
+          ".agents/memory/memory_hook.py",
+          ".agents/memory/memory_manager.py",
+          ".agents/memory/project_visualizer.py",
+          ".agents/memory/server.py",
+          ".agents/memory/visualizer_3d.py",
+          ".agents/rules/memory.md"
+        ]
+      },
+      {
+        "name": "root",
+        "file_count": 5,
+        "sample_files": [
+          ".gitignore",
+          "AGENTS.md",
+          "GEMINI.md",
+          "README.md",
+          "install_project_memory.py"
+        ]
+      },
+      {
+        "name": "tests",
+        "file_count": 1,
+        "sample_files": [
+          "tests/test_memory_manager.py"
+        ]
+      }
+    ]
+  },
+  "entrypoints": [
+    "README.md",
+    ".agents/memory/server.py"
+  ],
+  "files": [
+    {
+      "path": ".gitignore",
+      "size_bytes": 57,
+      "modified": "2026-11-07T10:14:14+00:00",
+      "signature": "716b9683f5cf"
+    },
+    {
+      "path": "AGENTS.md",
+      "size_bytes": 499,
+      "modified": "2026-11-07T10:13:17+00:00",
+      "signature": "130513a68e4f"
+    },
+    {
+      "path": "GEMINI.md",
+      "size_bytes": 528,
+      "modified": "2026-11-07T10:14:12+00:00",
+      "signature": "5852ef3ef1df"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 2963,
+      "modified": "2026-11-07T10:16:21+00:00",
+      "signature": "aac1a549892e"
+    },
+    {
+      "path": "install_project_memory.py",
+      "size_bytes": 2372,
+      "modified": "2026-11-07T10:16:21+00:00",
+      "signature": "c7d7e318451a"
+    },
+    {
+      "path": ".agents/hooks.json",
+      "size_bytes": 498,
+      "modified": "2026-10-05T08:18:25+00:00",
+      "signature": "ac16b62b0683"
+    },
+    {
+      "path": ".agents/memory/global_memory_scanner.py",
+      "size_bytes": 8539,
+      "modified": "2026-10-05T09:58:13+00:00",
+      "signature": "d54b997733aa"
+    },
+    {
+      "path": ".agents/memory/memory_hook.py",
+      "size_bytes": 1017,
+      "modified": "2026-11-07T10:15:30+00:00",
+      "signature": "285494ac48af"
+    },
+    {
+      "path": ".agents/memory/memory_manager.py",
+      "size_bytes": 14847,
+      "modified": "2026-11-07T10:14:31+00:00",
+      "signature": "8ae78a7cc935"
+    },
+    {
+      "path": ".agents/memory/project_visualizer.py",
+      "size_bytes": 4434,
+      "modified": "2026-11-07T10:11:42+00:00",
+      "signature": "4e61094e7cc8"
+    },
+    {
+      "path": ".agents/memory/server.py",
+      "size_bytes": 1049,
+      "modified": "2026-11-07T10:11:43+00:00",
+      "signature": "1a6c4e603063"
+    },
+    {
+      "path": ".agents/memory/visualizer_3d.py",
+      "size_bytes": 34493,
+      "modified": "2026-10-05T10:00:14+00:00",
+      "signature": "e2857e01e30e"
+    },
+    {
+      "path": ".agents/rules/memory.md",
+      "size_bytes": 667,
+      "modified": "2026-11-07T10:13:17+00:00",
+      "signature": "22e06245eb62"
+    },
+    {
+      "path": ".agents/skills/project-memory/SKILL.md",
+      "size_bytes": 1450,
+      "modified": "2026-11-07T10:13:16+00:00",
+      "signature": "fb6637f305e9"
+    },
+    {
+      "path": "tests/test_memory_manager.py",
+      "size_bytes": 2562,
+      "modified": "2026-11-07T10:14:13+00:00",
+      "signature": "f95697825f9f"
+    }
+  ],
+  "decisions": [
+    {
+      "id": 1,
+      "title": "Adopt Visual Antigravity Memory System",
+      "date": "2026-10-05",
+      "rationale": "Avoid spending unnecessary context tokens repeatedly scanning the filesystem by reading memory.json first."
+    },
+    {
+      "id": 2,
+      "title": "Use project-local, agent-neutral memory",
+      "rationale": "Portable metadata and explicit durable notes work across Codex, Antigravity, Gemini, and other agents without collecting private chat history.",
+      "created_at": "2026-11-07T15:45:41+05:30"
+    }
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Initialize Project Memory System",
+      "status": "completed",
+      "category": "Setup"
+    },
+    {
+      "id": 2,
+      "title": "Enforce Memory-First Context Rule for Antigravity",
+      "status": "completed",
+      "category": "Rules"
+    },
+    {
+      "id": 3,
+      "title": "Render Visualizable Dashboard Embed",
+      "status": "completed",
+      "category": "UI"
+    }
+  ],
+  "notes": []
+}
