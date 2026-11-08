@@ -147,18 +147,32 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
 .search input:focus {{ border-bottom-width: 3px; padding-bottom: 6px; }}
 .search span {{ position: absolute; right: 0; bottom: 8px; color: var(--muted); pointer-events: none; }}
 .graph-shell {{ background: var(--ink); color: white; border-top: 6px solid var(--cobalt); }}
-.graph-toolbar {{ display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 18px 20px; border-bottom: 1px solid #34414b; }}
+.graph-toolbar {{ display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px 20px; padding: 16px 20px; border-bottom: 1px solid #34414b; }}
 .graph-toolbar .search input {{ color: white; border-color: #74818a; }}
 .graph-toolbar .search input::placeholder {{ color: #9da8af; }}
 .graph-legend {{ color: #aab4ba; font-size: 12px; }}
-.graph-stage {{ width: 100%; min-height: 520px; display: block; overflow: hidden; }}
+.graph-key {{ display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 7px; }}
+.graph-key span {{ display: inline-flex; align-items: center; gap: 6px; }}
+.key-dot {{ width: 8px; height: 8px; border-radius: 50%; background: #f2f5f6; }}
+.key-dot.linked {{ background: #8fa9ff; }}
+.key-dot.hub {{ background: var(--signal); }}
+.graph-actions {{ display: flex; align-items: end; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }}
+.graph-controls {{ display: flex; border: 1px solid #69767f; }}
+.graph-button {{ min-width: 38px; height: 36px; border: 0; border-left: 1px solid #69767f; border-radius: 0; background: transparent; color: white; cursor: pointer; padding: 0 11px; }}
+.graph-button:first-child {{ border-left: 0; }}
+.graph-button:hover, .graph-button:focus-visible {{ background: #27343d; outline: 2px solid white; outline-offset: -2px; }}
+.graph-stage {{ width: 100%; min-height: 520px; display: block; overflow: hidden; cursor: grab; touch-action: none; user-select: none; }}
+.graph-stage.is-panning {{ cursor: grabbing; }}
 .graph-stage svg {{ display: block; width: 100%; height: 520px; }}
+.graph-shell:fullscreen {{ width: 100vw; height: 100vh; display: flex; flex-direction: column; background: var(--ink); border-top: 6px solid var(--cobalt); }}
+.graph-shell:fullscreen .graph-stage {{ flex: 1; min-height: 0; }}
+.graph-shell:fullscreen .graph-stage svg {{ height: 100%; }}
 .graph-edge {{ stroke: #53616b; stroke-width: 1; opacity: .62; vector-effect: non-scaling-stroke; }}
 .graph-node circle {{ fill: #f2f5f6; stroke: var(--ink); stroke-width: 1.5; cursor: pointer; vector-effect: non-scaling-stroke; }}
 .graph-node.is-connected circle {{ fill: #8fa9ff; }}
 .graph-node.is-hub circle {{ fill: var(--signal); }}
 .graph-node text {{ fill: #dbe3e7; font: 11px "Aptos", "Segoe UI", sans-serif; pointer-events: none; }}
-.graph-group-label {{ fill: #778690; font: 700 12px "Aptos", "Segoe UI", sans-serif; text-anchor: middle; }}
+.graph-group-label {{ fill: #aab6bd; font: 700 14px "Aptos", "Segoe UI", sans-serif; text-anchor: start; }}
 .graph-node:focus circle, .graph-node:hover circle {{ stroke: white; stroke-width: 3; }}
 .graph-detail {{ min-height: 78px; padding: 16px 20px; border-top: 1px solid #34414b; color: #c7d0d5; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px; align-items: center; }}
 .graph-detail strong {{ color: white; display: block; overflow-wrap: anywhere; }}
@@ -178,13 +192,13 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
 .bar {{ height: 100%; background: var(--cobalt); min-width: 4px; }}
 .file-count {{ text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }}
 .empty {{ padding: 24px 0; color: var(--muted); border-top: 1px solid var(--rule); }}
-.task-list {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--ink); }}
+.task-list {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--ink); max-height: 560px; overflow: auto; }}
 .task {{ min-height: 130px; padding: 20px 24px 22px 0; border-bottom: 1px solid var(--rule); }}
 .task:nth-child(even) {{ border-left: 1px solid var(--rule); padding-left: 24px; }}
 .task-state {{ color: var(--cobalt); font-size: 12px; font-weight: 700; margin-bottom: 12px; }}
 .task-title {{ font-size: 18px; font-weight: 610; line-height: 1.35; }}
 .task-category {{ margin-top: 8px; color: var(--muted); font-size: 13px; }}
-.decision-list {{ counter-reset: decisions; border-top: 1px solid var(--ink); }}
+.decision-list {{ counter-reset: decisions; border-top: 1px solid var(--ink); max-height: 720px; overflow: auto; }}
 .decision {{
   counter-increment: decisions;
   display: grid;
@@ -196,7 +210,7 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
 .decision::before {{ content: counter(decisions, decimal-leading-zero); color: var(--signal); font-weight: 750; font-variant-numeric: tabular-nums; }}
 .decision-title {{ font-size: 17px; font-weight: 650; line-height: 1.35; }}
 .decision-rationale {{ color: #47545d; max-width: 72ch; }}
-.note-list {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }}
+.note-list {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); max-height: 560px; overflow: auto; }}
 .note {{ background: var(--surface); padding: 22px; min-height: 110px; }}
 .note-id {{ color: var(--signal); font-size: 12px; font-weight: 700; margin-bottom: 10px; }}
 .changes {{ display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--rule); }}
@@ -207,19 +221,28 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
 .catalog-grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--rule); background: var(--rule); gap: 1px; }}
 .catalog-column {{ background: var(--surface); padding: 22px; min-height: 220px; }}
 .catalog-column h3 {{ margin: 0 0 18px; font-size: 16px; }}
-.catalog-list {{ list-style: none; margin: 0; padding: 0; }}
+.catalog-list {{ list-style: none; margin: 0; padding: 0 8px 0 0; max-height: 340px; overflow: auto; }}
 .catalog-item {{ padding: 12px 0; border-top: 1px solid var(--soft-rule); }}
 .catalog-item:first-child {{ border-top: 0; padding-top: 0; }}
 .catalog-title {{ font-weight: 650; overflow-wrap: anywhere; }}
 .catalog-meta {{ color: var(--muted); font-size: 12px; margin-top: 3px; overflow-wrap: anywhere; }}
-.history-filter {{ display: flex; align-items: center; gap: 10px; }}
-.history-filter input {{ border: 1px solid var(--rule); background: var(--surface); color: var(--ink); padding: 7px 9px; }}
-.history-list {{ border-top: 1px solid var(--ink); }}
+.history-filters {{ display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }}
+.history-filter {{ display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }}
+.history-filter input, .history-filter select {{ border: 1px solid var(--rule); background: var(--surface); color: var(--ink); padding: 7px 9px; }}
+.history-list {{ border-top: 1px solid var(--ink); max-height: 760px; overflow: auto; padding-right: 8px; }}
 .history-event {{ display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 28px; padding: 22px 0; border-bottom: 1px solid var(--rule); }}
 .history-date {{ font-weight: 650; }}
+.history-kind {{ display: inline-block; margin-top: 7px; padding: 2px 6px; border: 1px solid var(--rule); color: var(--muted); font-size: 11px; }}
+.history-title {{ font-weight: 650; margin-bottom: 6px; }}
 .history-counts {{ display: flex; gap: 16px; color: var(--muted); font-size: 13px; margin-bottom: 10px; }}
 .history-files {{ display: flex; flex-wrap: wrap; gap: 6px; }}
 .history-file {{ padding: 3px 7px; background: var(--surface); border: 1px solid var(--soft-rule); font-family: "Cascadia Code", Consolas, monospace; font-size: 11px; }}
+.history-details {{ margin-top: 10px; }}
+.history-details summary {{ color: var(--cobalt); cursor: pointer; font-size: 12px; }}
+.history-details[open] summary {{ margin-bottom: 10px; }}
+.git-context {{ color: var(--muted); font-size: 12px; margin-bottom: 16px; }}
+.catalog-list::-webkit-scrollbar, .history-list::-webkit-scrollbar, .task-list::-webkit-scrollbar, .decision-list::-webkit-scrollbar, .note-list::-webkit-scrollbar {{ width: 7px; }}
+.catalog-list::-webkit-scrollbar-thumb, .history-list::-webkit-scrollbar-thumb, .task-list::-webkit-scrollbar-thumb, .decision-list::-webkit-scrollbar-thumb, .note-list::-webkit-scrollbar-thumb {{ background: #aeb9bf; }}
 .footer {{ display: flex; justify-content: space-between; gap: 24px; padding-top: 32px; color: var(--muted); font-size: 12px; }}
 .footer strong {{ color: var(--ink); }}
 [hidden] {{ display: none !important; }}
@@ -328,8 +351,18 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
         <div class="section-head"><div><h2>File relationship graph</h2><div class="section-meta" id="graphMeta"></div></div></div>
         <div class="graph-shell">
           <div class="graph-toolbar">
-            <div class="graph-legend">Each node is a file. Lines are resolved imports, includes, assets, or links.</div>
-            <label class="search"><span aria-hidden="true">⌕</span><input id="graphSearch" type="search" placeholder="Find a file node" aria-label="Find a file node"></label>
+            <div class="graph-legend">Each node is a file. Drag the canvas to move; use the wheel to zoom.
+              <div class="graph-key"><span><i class="key-dot"></i>Standalone file</span><span><i class="key-dot linked"></i>Linked file</span><span><i class="key-dot hub"></i>Connection hub</span></div>
+            </div>
+            <div class="graph-actions">
+              <label class="search"><span aria-hidden="true">⌕</span><input id="graphSearch" type="search" placeholder="Find a file node" aria-label="Find a file node"></label>
+              <div class="graph-controls" aria-label="Graph view controls">
+                <button class="graph-button" id="graphZoomOut" type="button" aria-label="Zoom out">−</button>
+                <button class="graph-button" id="graphZoomIn" type="button" aria-label="Zoom in">+</button>
+                <button class="graph-button" id="graphReset" type="button">Fit</button>
+                <button class="graph-button" id="graphFullscreen" type="button">Full screen</button>
+              </div>
+            </div>
           </div>
           <div class="graph-stage" id="graphStage" aria-label="Interactive file relationship graph"></div>
           <div class="graph-detail" id="graphDetail"><div><strong>Select a file node</strong><div class="graph-detail-meta">Choose a node to inspect its path, type, and connections.</div></div></div>
@@ -357,8 +390,12 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
       <section class="section" id="history">
         <div class="section-head">
           <div><h2>Edit history</h2><div class="section-meta" id="historyMeta"></div></div>
-          <label class="history-filter">Date <input id="historyDate" type="date" aria-label="Filter edit history by date"></label>
+          <div class="history-filters">
+            <label class="history-filter">Show <select id="historyType" aria-label="Filter history type"><option value="all">All activity</option><option value="edit">File edits</option><option value="commit">Commits</option><option value="push">Pushes</option></select></label>
+            <label class="history-filter">Date <input id="historyDate" type="date" aria-label="Filter history by date"></label>
+          </div>
         </div>
+        <div class="git-context" id="gitContext"></div>
         <div class="history-list" id="historyList"></div>
         <div class="empty" id="historyEmpty" hidden>No scans match that date.</div>
       </section>
@@ -434,6 +471,32 @@ byId('stack').innerHTML = stack.length ? stack.map(item => `<span class="stack-i
 const entrypoints = memory.entrypoints || [];
 byId('entrypoints').innerHTML = entrypoints.length ? entrypoints.map(path => `<li><code>${{escapeHtml(path)}}</code></li>`).join('') : '<li class="section-meta">No entrypoints detected</li>';
 
+let graphView = {{x: 0, y: 0, width: 1000, height: 540}};
+let graphBounds = {{x: 0, y: 0, width: 1000, height: 540}};
+let graphPan = null;
+
+function updateGraphView() {{
+  const svg = byId('graphSvg');
+  if (svg) svg.setAttribute('viewBox', `${{graphView.x}} ${{graphView.y}} ${{graphView.width}} ${{graphView.height}}`);
+}}
+
+function resetGraphView() {{
+  graphView = {{...graphBounds}};
+  updateGraphView();
+}}
+
+function zoomGraph(scale, focusX = .5, focusY = .5) {{
+  const nextWidth = Math.min(5000, Math.max(90, graphView.width * scale));
+  const nextHeight = graphView.height * (nextWidth / graphView.width);
+  const anchorX = graphView.x + graphView.width * focusX;
+  const anchorY = graphView.y + graphView.height * focusY;
+  graphView.x = anchorX - nextWidth * focusX;
+  graphView.y = anchorY - nextHeight * focusY;
+  graphView.width = nextWidth;
+  graphView.height = nextHeight;
+  updateGraphView();
+}}
+
 function renderGraph() {{
   const allNodes = graph.nodes || [];
   const ranked = allNodes.slice().sort((a, b) => Number(b.connections || 0) - Number(a.connections || 0) || String(a.path).localeCompare(String(b.path)));
@@ -446,42 +509,42 @@ function renderGraph() {{
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(node);
   }});
-  const groupEntries = [...groups.entries()];
-  const columns = Math.max(1, Math.ceil(Math.sqrt(groupEntries.length * 1.7)));
-  const rows = Math.max(1, Math.ceil(groupEntries.length / columns));
+  const groupEntries = [...groups.entries()].sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+  const canvasWidth = 1400;
+  const nodeColumns = 8;
+  const columnWidth = 170;
+  const rowHeight = 46;
+  let cursorY = 54;
   const positions = new Map();
-  groupEntries.forEach(([moduleName, nodes], groupIndex) => {{
-    const column = groupIndex % columns;
-    const row = Math.floor(groupIndex / columns);
-    const centerX = ((column + .5) / columns) * 1000;
-    const centerY = ((row + .5) / rows) * 500 + 20;
-    const radius = Math.min(118, 48 + nodes.length * 7);
+  const groupLayouts = [];
+  groupEntries.forEach(([moduleName, nodes]) => {{
+    nodes.sort((a, b) => Number(b.connections || 0) - Number(a.connections || 0) || String(a.path).localeCompare(String(b.path)));
+    const nodeRows = Math.max(1, Math.ceil(nodes.length / nodeColumns));
+    groupLayouts.push({{moduleName, y: cursorY}});
     nodes.forEach((node, index) => {{
-      const angle = nodes.length === 1 ? 0 : (Math.PI * 2 * index / nodes.length) - Math.PI / 2;
-      const ring = nodes.length === 1 ? 0 : radius * (.82 + .18 * (index % 2));
-      positions.set(node.id, {{x: centerX + Math.cos(angle) * ring, y: centerY + Math.sin(angle) * ring}});
+      const column = index % nodeColumns;
+      const row = Math.floor(index / nodeColumns);
+      positions.set(node.id, {{x: 58 + column * columnWidth, y: cursorY + 42 + row * rowHeight}});
     }});
+    cursorY += nodeRows * rowHeight + 92;
   }});
+  graphBounds = {{x: 0, y: 0, width: canvasWidth, height: Math.max(540, cursorY)}};
   const lines = visibleEdges.map(edge => {{
     const source = positions.get(edge.source), target = positions.get(edge.target);
     return source && target ? `<line class="graph-edge" data-source="${{escapeHtml(edge.source)}}" data-target="${{escapeHtml(edge.target)}}" x1="${{source.x.toFixed(1)}}" y1="${{source.y.toFixed(1)}}" x2="${{target.x.toFixed(1)}}" y2="${{target.y.toFixed(1)}}"><title>${{escapeHtml(edge.kind)}}: ${{escapeHtml(edge.source)}} → ${{escapeHtml(edge.target)}}</title></line>` : '';
   }}).join('');
-  const groupLabels = groupEntries.map(([moduleName, nodes], groupIndex) => {{
-    const column = groupIndex % columns;
-    const row = Math.floor(groupIndex / columns);
-    const x = ((column + .5) / columns) * 1000;
-    const y = ((row + .5) / rows) * 500 - 105;
-    return `<text class="graph-group-label" x="${{x.toFixed(1)}}" y="${{Math.max(22, y).toFixed(1)}}">${{escapeHtml(moduleName)}}</text>`;
-  }}).join('');
+  const groupLabels = groupLayouts.map(layout => `<text class="graph-group-label" x="28" y="${{layout.y}}">${{escapeHtml(layout.moduleName)}}</text>`).join('');
   const nodes = visibleNodes.map((node, index) => {{
     const point = positions.get(node.id);
     const connections = Number(node.connections || 0);
     const radius = 4.5 + Math.min(7, Math.sqrt(connections) * 2.2);
     const state = connections >= 4 ? 'is-hub' : connections > 0 ? 'is-connected' : '';
-    const label = (connections > 0 || visibleNodes.length < 10) ? `<text x="${{(point.x + radius + 4).toFixed(1)}}" y="${{(point.y + 4).toFixed(1)}}">${{escapeHtml(node.label)}}</text>` : '';
+    const shortLabel = node.label.length > 19 ? `${{node.label.slice(0, 18)}}…` : node.label;
+    const label = `<text x="${{(point.x + radius + 5).toFixed(1)}}" y="${{(point.y + 4).toFixed(1)}}">${{escapeHtml(shortLabel)}}</text>`;
     return `<g class="graph-node ${{state}}" tabindex="0" role="button" data-path="${{escapeHtml(node.path)}}" aria-label="${{escapeHtml(node.path)}}, ${{connections}} connections"><circle cx="${{point.x.toFixed(1)}}" cy="${{point.y.toFixed(1)}}" r="${{radius.toFixed(1)}}"><title>${{escapeHtml(node.path)}}</title></circle>${{label}}</g>`;
   }}).join('');
-  byId('graphStage').innerHTML = `<svg viewBox="0 0 1000 540" role="img" aria-label="File relationship graph">${{groupLabels}}${{lines}}${{nodes}}</svg>`;
+  graphView = {{...graphBounds}};
+  byId('graphStage').innerHTML = `<svg id="graphSvg" viewBox="${{graphView.x}} ${{graphView.y}} ${{graphView.width}} ${{graphView.height}}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="File relationship graph">${{groupLabels}}${{lines}}${{nodes}}</svg>`;
   byId('graphMeta').textContent = `${{allNodes.length}} nodes / ${{(graph.edges || []).length}} links${{allNodes.length > 250 ? ' / showing 250 most connected' : ''}}`;
 }}
 
@@ -497,6 +560,45 @@ byId('graphStage').addEventListener('keydown', event => {{ const node = event.ta
 byId('graphSearch').addEventListener('input', event => {{
   const query = event.target.value.trim().toLowerCase();
   byId('graphStage').querySelectorAll('.graph-node').forEach(node => {{ node.style.opacity = !query || node.dataset.path.toLowerCase().includes(query) ? '1' : '.12'; }});
+}});
+byId('graphStage').addEventListener('wheel', event => {{
+  event.preventDefault();
+  const bounds = byId('graphStage').getBoundingClientRect();
+  const focusX = (event.clientX - bounds.left) / Math.max(1, bounds.width);
+  const focusY = (event.clientY - bounds.top) / Math.max(1, bounds.height);
+  zoomGraph(Math.exp(event.deltaY * .0012), focusX, focusY);
+}}, {{passive: false}});
+byId('graphStage').addEventListener('pointerdown', event => {{
+  if (event.button !== 0 || event.target.closest('.graph-node')) return;
+  graphPan = {{pointerId: event.pointerId, clientX: event.clientX, clientY: event.clientY, x: graphView.x, y: graphView.y}};
+  byId('graphStage').setPointerCapture(event.pointerId);
+  byId('graphStage').classList.add('is-panning');
+}});
+byId('graphStage').addEventListener('pointermove', event => {{
+  if (!graphPan || graphPan.pointerId !== event.pointerId) return;
+  const bounds = byId('graphStage').getBoundingClientRect();
+  graphView.x = graphPan.x - (event.clientX - graphPan.clientX) * graphView.width / Math.max(1, bounds.width);
+  graphView.y = graphPan.y - (event.clientY - graphPan.clientY) * graphView.height / Math.max(1, bounds.height);
+  updateGraphView();
+}});
+function endGraphPan(event) {{
+  if (!graphPan || graphPan.pointerId !== event.pointerId) return;
+  graphPan = null;
+  byId('graphStage').classList.remove('is-panning');
+}};
+byId('graphStage').addEventListener('pointerup', endGraphPan);
+byId('graphStage').addEventListener('pointercancel', endGraphPan);
+byId('graphStage').addEventListener('dblclick', event => {{ if (!event.target.closest('.graph-node')) resetGraphView(); }});
+byId('graphZoomIn').addEventListener('click', () => zoomGraph(.72));
+byId('graphZoomOut').addEventListener('click', () => zoomGraph(1.38));
+byId('graphReset').addEventListener('click', resetGraphView);
+byId('graphFullscreen').addEventListener('click', async () => {{
+  const shell = document.querySelector('.graph-shell');
+  if (document.fullscreenElement) await document.exitFullscreen();
+  else if (shell.requestFullscreen) await shell.requestFullscreen();
+}});
+document.addEventListener('fullscreenchange', () => {{
+  byId('graphFullscreen').textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
 }});
 
 function renderModules(query = '') {{
@@ -521,19 +623,42 @@ let chats = memory.chats || [];
 byId('chatList').innerHTML = chats.length ? chats.slice().reverse().map(chat => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(chat.title)}}</div><div class="catalog-meta">${{escapeHtml(chat.agent)}} / ${{escapeHtml(chat.summary)}}</div></li>`).join('') : '<li class="catalog-meta">No chat metadata imported. Transcripts are never collected automatically.</li>';
 
 let history = memory.history || [];
-function renderHistory(date = '') {{
-  const visible = history.slice().reverse().filter(event => !date || String(event.scanned_at || '').startsWith(date));
-  byId('historyList').innerHTML = visible.map(event => {{
-    const files = [...(event.added || []).map(path => ['+', path]), ...(event.changed || []).map(path => ['~', path]), ...(event.removed || []).map(path => ['−', path])];
-    const fileMarkup = files.slice(0, 18).map(([prefix, path]) => `<span class="history-file">${{prefix}} ${{escapeHtml(path)}}</span>`).join('');
-    const overflow = files.length > 18 ? `<span class="history-file">+${{files.length - 18}} more</span>` : '';
-    return `<article class="history-event"><div class="history-date">${{escapeHtml(formatDate(event.scanned_at).replace('Last scanned ', ''))}}</div><div><div class="history-counts"><span>${{(event.added || []).length}} added</span><span>${{(event.changed || []).length}} changed</span><span>${{(event.removed || []).length}} removed</span></div><div class="history-files">${{fileMarkup}}${{overflow}}</div></div></article>`;
+let gitInfo = memory.git || {{is_repository:false, branch:'', remotes:[], commits:[], pushes:[]}};
+function renderHistory() {{
+  const date = byId('historyDate').value;
+  const kind = byId('historyType').value;
+  const events = [
+    ...history.map(item => ({{kind:'edit', date:item.scanned_at || '', item}})),
+    ...(gitInfo.commits || []).map(item => ({{kind:'commit', date:item.date || '', item}})),
+    ...(gitInfo.pushes || []).map(item => ({{kind:'push', date:item.date || '', item}}))
+  ].filter(event => (kind === 'all' || event.kind === kind) && (!date || String(event.date).startsWith(date)))
+   .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+
+  byId('gitContext').innerHTML = gitInfo.is_repository
+    ? `<strong>${{escapeHtml(gitInfo.branch || 'Detached HEAD')}}</strong><span>${{(gitInfo.remotes || []).length ? (gitInfo.remotes || []).map(remote => `${{escapeHtml(remote.name)}} · ${{escapeHtml(remote.url)}}`).join('<br>') : 'No push remote configured'}}<br>${{escapeHtml(gitInfo.push_history_note || 'Push history may be incomplete because Git does not keep a permanent push log.')}}</span>`
+    : '<strong>No Git history</strong><span>This project is not a Git repository.</span>';
+
+  byId('historyList').innerHTML = events.map(event => {{
+    const item = event.item;
+    if (event.kind === 'edit') {{
+      const files = [...(item.added || []).map(path => ['+', path]), ...(item.changed || []).map(path => ['~', path]), ...(item.removed || []).map(path => ['−', path])];
+      const details = files.length ? `<details class="history-details"><summary>Show ${{files.length}} affected files</summary><div class="history-files">${{files.map(([prefix, path]) => `<span class="history-file">${{prefix}} ${{escapeHtml(path)}}</span>`).join('')}}</div></details>` : '';
+      return `<article class="history-event"><div class="history-date">${{escapeHtml(formatDate(item.scanned_at).replace('Last scanned ', ''))}}</div><div><div class="history-kind">Edit history</div><div class="history-title">Repository scan</div><div class="history-counts"><span>${{(item.added || []).length}} added</span><span>${{(item.changed || []).length}} changed</span><span>${{(item.removed || []).length}} removed</span></div>${{details}}</div></article>`;
+    }}
+    if (event.kind === 'commit') {{
+      const files = item.files || [];
+      const details = files.length ? `<details class="history-details"><summary>Show ${{files.length}} changed files</summary><div class="history-files">${{files.map(file => `<span class="history-file">${{escapeHtml(file.status || 'M')}} ${{escapeHtml(file.path || '')}}</span>`).join('')}}</div></details>` : '';
+      return `<article class="history-event"><div class="history-date">${{escapeHtml(formatDate(item.date).replace('Last scanned ', ''))}}</div><div><div class="history-kind">Commit</div><div class="history-title">${{escapeHtml(item.subject || 'Untitled commit')}}</div><div class="catalog-meta">${{escapeHtml(item.short_hash || '')}} · ${{escapeHtml(item.author || 'Unknown author')}}</div>${{details}}</div></article>`;
+    }}
+    return `<article class="history-event"><div class="history-date">${{escapeHtml(formatDate(item.date).replace('Last scanned ', ''))}}</div><div><div class="history-kind">Push</div><div class="history-title">${{escapeHtml(item.action || 'Pushed changes')}}</div><div class="catalog-meta">${{escapeHtml(String(item.commit || '').slice(0, 8))}} · ${{escapeHtml(item.ref || 'local reflog')}}</div></div></article>`;
   }}).join('');
-  byId('historyMeta').textContent = `${{visible.length}} of ${{history.length}} scans`;
-  byId('historyEmpty').hidden = visible.length !== 0;
+  const total = history.length + (gitInfo.commits || []).length + (gitInfo.pushes || []).length;
+  byId('historyMeta').textContent = `${{events.length}} of ${{total}} events`;
+  byId('historyEmpty').hidden = events.length !== 0;
 }}
 renderHistory();
-byId('historyDate').addEventListener('input', event => renderHistory(event.target.value));
+byId('historyDate').addEventListener('input', renderHistory);
+byId('historyType').addEventListener('change', renderHistory);
 
 byId('taskMeta').textContent = `${{activeTasks.length}} open`;
 byId('tasks').innerHTML = activeTasks.map(task => `<article class="task"><div class="task-state">${{escapeHtml(task.status || 'pending')}}</div><div class="task-title">${{escapeHtml(task.title)}}</div><div class="task-category">${{escapeHtml(task.category || 'General')}}</div></article>`).join('');
@@ -590,6 +715,7 @@ function applyMemory(nextMemory) {{
   agents = memory.agents || [];
   chats = memory.chats || [];
   history = memory.history || [];
+  gitInfo = memory.git || {{is_repository:false, branch:'', remotes:[], commits:[], pushes:[]}};
   decisions = memory.decisions || [];
   notes = memory.notes || [];
   changes = summary.changes || {{}};
@@ -613,6 +739,7 @@ function applyMemory(nextMemory) {{
   byId('graphSearch').value = '';
   byId('moduleSearch').value = '';
   byId('historyDate').value = '';
+  byId('historyType').value = 'all';
   byId('graphDetail').innerHTML = '<div><strong>Select a file node</strong><div class="graph-detail-meta">Choose a node to inspect its path, type, and connections.</div></div>';
   renderGraph();
   renderModules();

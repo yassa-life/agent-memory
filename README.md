@@ -20,7 +20,7 @@ The source code remains authoritative. Memory tells the agent where to look; it 
 - One node per indexed file.
 - Edges for Python imports, JavaScript/TypeScript imports and requires, Java/Kotlin imports, C/C++ includes, HTML assets, CSS imports, and Markdown links.
 - Content hashes detect real edits without storing source text.
-- Interactive offline SVG visualization with search and file details.
+- Collision-free offline SVG visualization with search, file details, drag-to-pan, wheel/button zoom, fit, and full-screen controls.
 - Focused relationship queries up to three levels deep.
 
 ### Any-agent integration
@@ -46,9 +46,9 @@ Connect an agent that is not in the built-in list:
 python .agents/memory/memory_manager.py register-agent "My Agent" --instructions ".my-agent/instructions.md"
 ```
 
-### Dated edit history
+### Detailed activity history
 
-Each meaningful scan records added, changed, and removed files with a timestamp. The dashboard can filter scan history by date.
+Each meaningful scan records added, changed, and removed files with a timestamp. The dashboard combines those edits with local Git commit details and locally detectable push reflog events. Filter by activity type or date, then expand a row only when its file list is needed. Git does not keep a permanent authoritative push log, so push history is clearly marked as potentially incomplete.
 
 ### Project and chat catalogue
 

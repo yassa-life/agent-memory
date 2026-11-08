@@ -8,6 +8,7 @@ import importlib.util
 import json
 import os
 import re
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -137,12 +138,54 @@ def detect_agents(root: Path, existing: list[dict[str, Any]]) -> list[dict[str, 
     return sorted(by_key.values(), key=lambda item: item.get("name", ""))
 
 
+def _git(root: Path, *args: str) -> str:
+    try:
+        result = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, encoding="utf-8", errors="ignore", timeout=20, check=False)
+        return result.stdout.strip() if result.returncode == 0 else ""
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+
+
+def scan_git_history(root: Path, limit: int = 100) -> dict[str, Any]:
+    if not (root / ".git").exists():
+        return {"is_repository": False, "branch": "", "remotes": [], "commits": [], "pushes": []}
+    branch = _git(root, "branch", "--show-current")
+    remotes = []
+    for line in _git(root, "remote", "-v").splitlines():
+        parts = line.split()
+        if len(parts) >= 3 and parts[2] == "(push)": remotes.append({"name": parts[0], "url": parts[1]})
+    commits: list[dict[str, Any]] = []
+    current: dict[str, Any] | None = None
+    raw_log = _git(root, "log", "--all", f"--max-count={limit}", "--date=iso-strict", "--pretty=format:@@AM@@%H%x1f%h%x1f%an%x1f%aI%x1f%s", "--name-status")
+    for line in raw_log.splitlines():
+        if line.startswith("@@AM@@"):
+            fields = line[6:].split("\x1f", 4)
+            if len(fields) == 5:
+                current = {"hash": fields[0], "short_hash": fields[1], "author": fields[2], "date": fields[3], "subject": fields[4], "files": []}
+                commits.append(current)
+        elif current and line.strip():
+            parts = line.split("\t", 1)
+            current["files"].append({"status": parts[0], "path": parts[1] if len(parts) > 1 else ""})
+    pushes: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    raw_reflog = _git(root, "reflog", "show", "--all", "--date=iso-strict", "--format=%H%x1f%gD%x1f%gs")
+    for line in raw_reflog.splitlines():
+        fields = line.split("\x1f", 2)
+        if len(fields) != 3 or "push" not in fields[2].lower(): continue
+        key = (fields[0], fields[1])
+        if key in seen: continue
+        seen.add(key)
+        date_match = re.search(r"@\{([^}]+)\}", fields[1])
+        pushes.append({"commit": fields[0], "ref": fields[1].split("@{", 1)[0], "date": date_match.group(1) if date_match else "", "action": fields[2]})
+    return {"is_repository": True, "branch": branch, "remotes": remotes, "commits": commits, "pushes": pushes[:limit], "push_history_note": "Push events come from local reflogs and may be incomplete."}
+
+
 def default_memory(root: Path) -> dict[str, Any]:
     return {
         "schema_version": SCHEMA_VERSION,
         "project": {"name": root.name, "display_name": root.name.replace("_", " ").replace("-", " ").title(), "description": "", "root": ".", "created_at": now_iso(), "last_scanned": None},
         "summary": {}, "architecture": {"overview": "", "modules": []}, "entrypoints": [],
-        "files": [], "graph": {"nodes": [], "edges": [], "summary": {}}, "history": [],
+        "files": [], "graph": {"nodes": [], "edges": [], "summary": {}}, "history": [], "git": {"is_repository": False, "branch": "", "remotes": [], "commits": [], "pushes": []},
         "agents": [], "chats": [], "projects": [], "decisions": [], "tasks": [], "notes": [],
     }
 
@@ -191,6 +234,7 @@ def scan(root: Path, description: str | None = None, max_files: int = 5000, disp
     data["project"]["last_scanned"] = scanned_at
     data["project"]["tech_stack"] = detect_stack(files)
     data["files"], data["graph"] = files, graph
+    data["git"] = scan_git_history(root)
     data["entrypoints"] = infer_entrypoints(files)
     data["architecture"]["modules"] = infer_modules(files)
     data["agents"] = detect_agents(root, data["agents"])
@@ -227,6 +271,7 @@ def scan_snapshot(root: Path, display_name: str | None = None, max_files: int = 
     data["project"]["last_scanned"] = scanned_at
     data["project"]["tech_stack"] = detect_stack(files)
     data["files"], data["graph"] = files, graph
+    data["git"] = scan_git_history(root)
     data["entrypoints"] = infer_entrypoints(files)
     data["architecture"]["modules"] = infer_modules(files)
     data["agents"] = detect_agents(root, data["agents"])
@@ -310,7 +355,7 @@ def track_project(root: Path, project_path: Path, description: str = "", display
         target_project, target_summary = target["project"], target["summary"]
     data = load_memory(root) or scan(root)
     projects = [item for item in data.get("projects", []) if Path(item.get("path", "")).resolve() != project_path]
-    snapshot = {key: target.get(key) for key in ("schema_version", "project", "summary", "architecture", "entrypoints", "graph", "history", "agents", "chats", "decisions", "tasks", "notes")}
+    snapshot = {key: target.get(key) for key in ("schema_version", "project", "summary", "architecture", "entrypoints", "graph", "history", "git", "agents", "chats", "decisions", "tasks", "notes")}
     record = {"id": re.sub(r"[^a-z0-9]+", "-", (source_id or project_path.name).lower()).strip("-") or f"project-{len(projects)+1}", "name": display_name or target_project.get("display_name") or target_project.get("name") or project_path.name, "path": str(project_path), "description": description or target_project.get("description", ""), "last_scanned": target_project.get("last_scanned"), "file_count": target_summary.get("file_count", 0), "edge_count": target_summary.get("edge_count", 0), "tracked_at": now_iso(), "source": source, "source_id": source_id, "is_current": project_path == root, "snapshot": snapshot}
     projects.append(record); data["projects"] = sorted(projects, key=lambda item: item["name"].lower()); save_memory(root, data); return record
 

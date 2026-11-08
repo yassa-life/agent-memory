@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -34,6 +35,24 @@ class ProjectMemoryTests(unittest.TestCase):
         self.assertIn("Edit history", dashboard)
         self.assertIn('id="projectSelect"', dashboard)
         self.assertIn('id="agentSelect"', dashboard)
+        self.assertIn('id="graphZoomIn"', dashboard)
+        self.assertIn('id="graphFullscreen"', dashboard)
+        self.assertIn('id="historyType"', dashboard)
+        self.assertIn('value="commit"', dashboard)
+        self.assertIn('class="history-details"', dashboard)
+        self.assertIn("pointermove", dashboard)
+
+    def test_scans_detailed_git_commit_history(self):
+        subprocess.run(["git", "init", str(self.root)], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(self.root), "add", "README.md", "src/main.py"], check=True, capture_output=True)
+        subprocess.run([
+            "git", "-C", str(self.root), "-c", "user.name=Memory Test",
+            "-c", "user.email=memory@example.test", "commit", "-m", "Add sample files",
+        ], check=True, capture_output=True)
+        data = memory_manager.scan(self.root)
+        self.assertTrue(data["git"]["is_repository"])
+        self.assertEqual(data["git"]["commits"][0]["subject"], "Add sample files")
+        self.assertIn("README.md", {item["path"] for item in data["git"]["commits"][0]["files"]})
 
     def test_scan_preserves_durable_records(self):
         memory_manager.scan(self.root)
