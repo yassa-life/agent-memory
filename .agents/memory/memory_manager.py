@@ -206,6 +206,38 @@ def scan(root: Path, description: str | None = None, max_files: int = 5000, disp
     return data
 
 
+def scan_snapshot(root: Path, display_name: str | None = None, max_files: int = 5000) -> dict[str, Any]:
+    """Build a complete project snapshot without writing into that project."""
+    old = load_memory(root)
+    data = default_memory(root)
+    if old:
+        for key in ("decisions", "tasks", "notes", "history", "agents", "chats"):
+            if isinstance(old.get(key), list): data[key] = old[key]
+        old_project = old.get("project", {})
+        if isinstance(old_project, dict):
+            for key in ("created_at", "description", "display_name"):
+                if old_project.get(key) is not None: data["project"][key] = old_project[key]
+        if isinstance(old.get("architecture"), dict): data["architecture"]["overview"] = old["architecture"].get("overview", "")
+    if display_name: data["project"]["display_name"] = display_name
+    files, truncated = scan_file_records(root, read_ignore_patterns(root), ignored, max_files)
+    changes = _changes(old, files)
+    graph = build_graph(root, files)
+    scanned_at = now_iso()
+    data["project"]["root"] = str(root)
+    data["project"]["last_scanned"] = scanned_at
+    data["project"]["tech_stack"] = detect_stack(files)
+    data["files"], data["graph"] = files, graph
+    data["entrypoints"] = infer_entrypoints(files)
+    data["architecture"]["modules"] = infer_modules(files)
+    data["agents"] = detect_agents(root, data["agents"])
+    data["summary"] = {"file_count": len(files), "total_bytes": sum(item["size_bytes"] for item in files), "scan_truncated": truncated, "edge_count": graph["summary"]["edge_count"], "connected_files": graph["summary"]["connected_files"], "changes": changes}
+    if any(changes.values()) or not data["history"]:
+        data["history"].append({"id": len(data["history"]) + 1, "scanned_at": scanned_at, **changes})
+        data["history"] = data["history"][-HISTORY_LIMIT:]
+    data["projects"] = []
+    return data
+
+
 def next_id(items: list[dict[str, Any]]) -> int:
     return max((int(item.get("id", 0)) for item in items if str(item.get("id", "")).isdigit()), default=0) + 1
 
@@ -283,7 +315,7 @@ def track_project(root: Path, project_path: Path, description: str = "", display
     projects.append(record); data["projects"] = sorted(projects, key=lambda item: item["name"].lower()); save_memory(root, data); return record
 
 
-def sync_projects(root: Path, manifest: Path) -> list[dict[str, Any]]:
+def sync_projects(root: Path, manifest: Path, deep_scan: bool = False, max_files: int = 5000) -> list[dict[str, Any]]:
     try:
         payload = json.loads(manifest.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -296,10 +328,51 @@ def sync_projects(root: Path, manifest: Path) -> list[dict[str, Any]]:
         path = Path(entry["path"]).resolve()
         if not path.is_dir(): continue
         unique[os.path.normcase(str(path))] = entry
-    records = []
-    for entry in unique.values():
-        records.append(track_project(root, Path(entry["path"]), display_name=entry.get("label"), source=entry.get("source", "manifest"), source_id=entry.get("projectId")))
-    return records
+    if not deep_scan:
+        return [track_project(root, Path(entry["path"]), display_name=entry.get("label"), source=entry.get("source", "manifest"), source_id=entry.get("projectId")) for entry in unique.values()]
+
+    current = load_memory(root) or scan(root)
+    transient: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    total_projects = len(unique)
+    for project_index, entry in enumerate(unique.values(), start=1):
+        project_path = Path(entry["path"]).resolve()
+        print(f"[{project_index}/{total_projects}] Scanning {entry.get('label') or project_path.name}...", flush=True)
+        snapshot = current if project_path == root else scan_snapshot(project_path, entry.get("label"), max_files)
+        project = snapshot.get("project", {})
+        summary = snapshot.get("summary", {})
+        project_id = re.sub(r"[^a-z0-9-]+", "-", str(entry.get("projectId") or project_path.name).lower()).strip("-") or f"project-{len(transient)+1}"
+        record = {"id": project_id, "name": entry.get("label") or project.get("display_name") or project_path.name, "path": str(project_path), "description": project.get("description", ""), "last_scanned": project.get("last_scanned"), "file_count": summary.get("file_count", 0), "edge_count": summary.get("edge_count", 0), "tracked_at": now_iso(), "source": entry.get("source", "manifest"), "source_id": entry.get("projectId"), "is_current": project_path == root}
+        transient.append((record, snapshot))
+
+    output_dir = root / ".agents" / "memory" / "projects"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        from project_visualizer import render_dashboard
+    except ImportError:
+        visualizer_path = Path(__file__).with_name("project_visualizer.py")
+        spec = importlib.util.spec_from_file_location("project_visualizer", visualizer_path)
+        if not spec or not spec.loader: raise SystemExit("Cannot load dashboard renderer")
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module); render_dashboard = module.render_dashboard
+
+    catalog: list[dict[str, Any]] = []
+    for record, _ in transient:
+        item = dict(record)
+        item["dashboard_file"] = "visualizer.html" if item["is_current"] else f"projects/{item['id']}.html"
+        catalog.append(item)
+    for record, snapshot in transient:
+        if record["is_current"]: continue
+        adjusted_catalog = []
+        for item in catalog:
+            adjusted = dict(item)
+            adjusted["is_current"] = item["id"] == record["id"]
+            adjusted["dashboard_file"] = "../visualizer.html" if item["is_current"] else f"{item['id']}.html"
+            adjusted_catalog.append(adjusted)
+        dashboard_data = {**snapshot, "projects": adjusted_catalog}
+        atomic_write(output_dir / f"{record['id']}.json", json.dumps(dashboard_data, indent=2, ensure_ascii=False) + "\n")
+        atomic_write(output_dir / f"{record['id']}.html", render_dashboard(dashboard_data))
+    current["projects"] = sorted(catalog, key=lambda item: item["name"].lower())
+    save_memory(root, current)
+    return current["projects"]
 
 
 def render_context(data: dict[str, Any]) -> str:
@@ -352,7 +425,7 @@ def build_parser() -> argparse.ArgumentParser:
     custom_agent = sub.add_parser("register-agent", help="connect any other agent using its project instruction file"); custom_agent.add_argument("name"); custom_agent.add_argument("--instructions", required=True, help="instruction file path inside the project")
     chat = sub.add_parser("import-chat", help="track chat metadata and an explicit summary without copying transcript text"); chat.add_argument("source", type=Path); chat.add_argument("--agent", required=True); chat.add_argument("--title", required=True); chat.add_argument("--summary", required=True); chat.add_argument("--date")
     project = sub.add_parser("track-project", help="add another project to this memory dashboard"); project.add_argument("path", type=Path); project.add_argument("--description", default="")
-    sync = sub.add_parser("sync-projects", help="import and deduplicate projects from a JSON manifest"); sync.add_argument("manifest", type=Path)
+    sync = sub.add_parser("sync-projects", help="import and deduplicate projects from a JSON manifest"); sync.add_argument("manifest", type=Path); sync.add_argument("--scan", action="store_true", help="deep-scan every project and generate its dashboard"); sync.add_argument("--max-files", type=int, default=5000)
     serve = sub.add_parser("serve"); serve.add_argument("--port", type=int, default=28492)
     return parser
 
@@ -380,7 +453,7 @@ def main(argv: list[str] | None = None) -> int:
     elif command == "track-project":
         record = track_project(root, args.path, args.description); print(f"Tracking {record['name']}: {record['path']}")
     elif command == "sync-projects":
-        records = sync_projects(root, args.manifest); print(f"Synchronized {len(records)} unique projects")
+        records = sync_projects(root, args.manifest, args.scan, args.max_files); print(f"Synchronized {len(records)} unique projects" + (" with diagrams" if args.scan else ""))
     elif command == "serve":
         from server import run_server
         run_server(port=args.port)

@@ -554,7 +554,7 @@ byId('removedCount').textContent = (changes.removed || []).length.toLocaleString
 
 const projectChoices = [
   {{key: '__current__', name: rootMemory.project?.display_name || rootMemory.project?.name || 'Current project', memory: rootMemory}},
-  ...(rootMemory.projects || []).filter(item => item.snapshot && !item.is_current).map((item, index) => ({{key: `tracked-${{index}}`, name: item.name, memory: item.snapshot}}))
+  ...(rootMemory.projects || []).filter(item => !item.is_current && (item.snapshot || item.dashboard_file)).map((item, index) => ({{key: `tracked-${{index}}`, name: item.name, memory: item.snapshot, href: item.dashboard_file}}))
 ];
 byId('projectSelect').innerHTML = projectChoices.map(choice => `<option value="${{escapeHtml(choice.key)}}">${{escapeHtml(choice.name)}}</option>`).join('');
 
@@ -636,7 +636,9 @@ function applyMemory(nextMemory) {{
 
 byId('projectSelect').addEventListener('change', event => {{
   const choice = projectChoices.find(item => item.key === event.target.value);
-  if (choice) applyMemory(choice.memory);
+  if (!choice) return;
+  if (choice.href) window.location.href = choice.href;
+  else applyMemory(choice.memory);
 }});
 byId('agentSelect').addEventListener('change', renderAgentContext);
 applyMemory(rootMemory);

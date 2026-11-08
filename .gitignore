@@ -5,6 +5,7 @@ __pycache__/
 .agents/memory/context.md
 .agents/memory/visualizer.html
 .agents/memory/*.local.json
+.agents/memory/projects/
 # Retained locally from the original private chat-analytics prototype.
 .agents/memory/global_memory_scanner.py
 .agents/memory/visualizer_3d.py

@@ -68,6 +68,14 @@ python .agents/memory/memory_manager.py sync-projects .agents/memory/codex_proje
 
 Duplicate paths are removed automatically. Projects that have not initialized Agent Memory still appear in the selector with an empty-state snapshot. Local manifests and generated dashboards are Git-ignored because they contain machine-specific paths.
 
+Deep-scan every imported project and generate a complete file graph, dated snapshot, and standalone dashboard for each one:
+
+```text
+python .agents/memory/memory_manager.py sync-projects .agents/memory/codex_projects.local.json --scan
+```
+
+The scan is read-only for the imported projects. Results are stored centrally under `.agents/memory/projects/`; it does not install or write Agent Memory files into those repositories.
+
 Import chat metadata with an explicit summary:
 
 ```text

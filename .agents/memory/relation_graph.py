@@ -73,12 +73,19 @@ def _family(extension: str) -> str | None:
     return None
 
 
-def content_signature(path: Path) -> str:
+def content_signature(path: Path, full_hash_limit: int = 2_000_000) -> str:
     digest = hashlib.sha256()
     try:
+        stat = path.stat()
         with path.open("rb") as handle:
-            for chunk in iter(lambda: handle.read(131072), b""):
-                digest.update(chunk)
+            if stat.st_size <= full_hash_limit:
+                for chunk in iter(lambda: handle.read(131072), b""):
+                    digest.update(chunk)
+            else:
+                digest.update(f"{stat.st_size}:{stat.st_mtime_ns}".encode())
+                digest.update(handle.read(65536))
+                handle.seek(max(0, stat.st_size - 65536))
+                digest.update(handle.read(65536))
     except OSError:
         stat = path.stat()
         digest.update(f"{stat.st_size}:{stat.st_mtime_ns}".encode())

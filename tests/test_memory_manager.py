@@ -115,6 +115,12 @@ class ProjectMemoryTests(unittest.TestCase):
             self.assertEqual(len(records), 1)
             self.assertEqual(records[0]["name"], "Updated label")
             self.assertIn("snapshot", records[0])
+            deep_records = memory_manager.sync_projects(self.root, manifest, deep_scan=True, max_files=100)
+            self.assertEqual(len(deep_records), 1)
+            project_id = deep_records[0]["id"]
+            self.assertTrue((self.root / ".agents/memory/projects" / f"{project_id}.json").exists())
+            self.assertTrue((self.root / ".agents/memory/projects" / f"{project_id}.html").exists())
+            self.assertIn("dashboard_file", deep_records[0])
 
 
 if __name__ == "__main__":
