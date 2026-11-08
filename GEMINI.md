@@ -1,6 +1,6 @@
-# Project Memory Protocol
+# Agent Memory Protocol
 
-At the start of a task, read `.agents/memory/context.md`. Use it to locate relevant files without repeatedly scanning the full repository. Verify relevant source before editing because memory is a map, not a substitute for source code.
+At the start of a task, read `.agents/memory/context.md`. Query `python .agents/memory/memory_manager.py related "path/to/file"` to locate connected files without repeatedly scanning the full repository. Verify relevant source before editing because memory is a map, not a substitute for source code.
 
 After meaningful changes, run `python .agents/memory/memory_manager.py scan`.
 

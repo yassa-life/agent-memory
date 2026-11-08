@@ -14,9 +14,9 @@ def main() -> None:
     if mode == "pre_invocation":
         synced = (MEMORY_DIR / "context.md").exists()
         message = (
-            "Project memory is ready. Read .agents/memory/context.md before broad filesystem exploration. Refresh it after meaningful repository changes."
+            "Agent Memory is ready. Read .agents/memory/context.md and use the related-file query before broad exploration. Refresh it after meaningful repository changes."
             if synced else
-            "Project memory could not be refreshed; continue normally and run the memory scan when practical."
+            "Agent Memory is unavailable; continue normally and run the memory scan when practical."
         )
         print(json.dumps({"injectSteps": [{"ephemeralMessage": message}]}))
     else:

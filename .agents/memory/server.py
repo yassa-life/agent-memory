@@ -26,7 +26,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 def run_server(port=PORT):
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("127.0.0.1", port), CustomHandler) as httpd:
-        print(f"Project Memory dashboard running at http://localhost:{port}")
+        print(f"Agent Memory dashboard running at http://localhost:{port}")
         sys.stdout.flush()
         try:
             httpd.serve_forever()
