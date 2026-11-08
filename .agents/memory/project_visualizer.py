@@ -224,6 +224,7 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
 .catalog-list {{ list-style: none; margin: 0; padding: 0 8px 0 0; max-height: 340px; overflow: auto; }}
 .catalog-item {{ padding: 12px 0; border-top: 1px solid var(--soft-rule); }}
 .catalog-item:first-child {{ border-top: 0; padding-top: 0; }}
+.catalog-item.is-active {{ border-left: 3px solid var(--cobalt); padding-left: 10px; }}
 .catalog-title {{ font-weight: 650; overflow-wrap: anywhere; }}
 .catalog-meta {{ color: var(--muted); font-size: 12px; margin-top: 3px; overflow-wrap: anywhere; }}
 .history-filters {{ display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }}
@@ -616,7 +617,8 @@ renderModules();
 byId('moduleSearch').addEventListener('input', event => renderModules(event.target.value));
 
 let agents = memory.agents || [];
-byId('agentList').innerHTML = agents.length ? agents.map(agent => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(agent.name)}}</div><div class="catalog-meta">${{escapeHtml(agent.status || 'detected')}} / ${{escapeHtml(agent.instruction_file || 'No instruction file')}}</div></li>`).join('') : '<li class="catalog-meta">No AI agents detected. Run <code>enable-agent</code> to add one.</li>';
+let agentCatalog = memory.agent_catalog || agents;
+let activeAgentKey = new URLSearchParams(window.location.search).get('agent') || '__all__';
 let projects = memory.projects || [];
 byId('projectList').innerHTML = projects.length ? projects.map(item => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(item.name)}}</div><div class="catalog-meta">${{Number(item.file_count || 0)}} files / ${{Number(item.edge_count || 0)}} links<br>${{escapeHtml(item.path)}}</div></li>`).join('') : '<li class="catalog-meta">No projects tracked yet.</li>';
 let chats = memory.chats || [];
@@ -683,23 +685,34 @@ const projectChoices = [
 ];
 byId('projectSelect').innerHTML = projectChoices.map(choice => `<option value="${{escapeHtml(choice.key)}}">${{escapeHtml(choice.name)}}</option>`).join('');
 
-function renderAgentSelection(preferred = '__all__') {{
-  const options = [`<option value="__all__">All agents</option>`, ...agents.map(agent => `<option value="${{escapeHtml(agent.key || agent.id || agent.name)}}">${{escapeHtml(agent.name)}}</option>`)];
+function renderAgentSelection(preferred = activeAgentKey) {{
+  const options = [`<option value="__all__">All AI agents</option>`, ...agentCatalog.map(agent => `<option value="${{escapeHtml(agent.key || agent.id || agent.name)}}">${{escapeHtml(agent.name)}} (${{agent.connected ? 'connected' : 'available'}})</option>`)];
   byId('agentSelect').innerHTML = options.join('');
   const valid = [...byId('agentSelect').options].some(option => option.value === preferred);
   byId('agentSelect').value = valid ? preferred : '__all__';
+  activeAgentKey = byId('agentSelect').value;
   renderAgentContext();
 }}
 
-function renderAgentContext() {{
+function renderAgentContext(updateUrl = false) {{
   const selected = byId('agentSelect').value;
-  const agent = agents.find(item => String(item.key || item.id || item.name) === selected);
+  activeAgentKey = selected;
+  const agent = agentCatalog.find(item => String(item.key || item.id || item.name) === selected);
   const visibleChats = agent ? chats.filter(chat => String(chat.agent || '').toLowerCase() === String(agent.name || '').toLowerCase()) : chats;
-  if (agent) {{
-    byId('agentContext').innerHTML = `<strong>${{escapeHtml(agent.name)}}</strong><span>${{escapeHtml(agent.status || 'detected')}} / ${{escapeHtml(agent.instruction_file || 'No instruction file')}} / ${{visibleChats.length}} tracked chats</span>`;
-  }} else {{
-    byId('agentContext').innerHTML = `<strong>All agents</strong><span>${{agents.length}} available in this project / ${{chats.length}} tracked chats</span>`;
+  const visibleAgents = agent ? [agent] : agentCatalog;
+  if (updateUrl && window.history?.replaceState) {{
+    const url = new URL(window.location.href);
+    if (selected === '__all__') url.searchParams.delete('agent'); else url.searchParams.set('agent', selected);
+    window.history.replaceState(null, '', url);
   }}
+  if (agent) {{
+    const state = agent.connected ? 'Connected to this project' : 'Available to connect';
+    byId('agentContext').innerHTML = `<strong>Filtering by ${{escapeHtml(agent.name)}}</strong><span>${{state}} / ${{escapeHtml(agent.instruction_file || 'No instruction file')}} / ${{visibleChats.length}} tracked chats<br>Project files and Git activity stay visible because they are shared and are not reliably attributed to one AI agent.</span>`;
+  }} else {{
+    const connected = agentCatalog.filter(item => item.connected).length;
+    byId('agentContext').innerHTML = `<strong>All AI agents</strong><span>${{connected}} connected / ${{agentCatalog.length}} available / ${{chats.length}} tracked chats</span>`;
+  }}
+  byId('agentList').innerHTML = visibleAgents.length ? visibleAgents.map(item => `<li class="catalog-item${{agent ? ' is-active' : ''}}"><div class="catalog-title">${{escapeHtml(item.name)}}</div><div class="catalog-meta">${{item.connected ? 'Connected' : 'Available'}} / ${{escapeHtml(item.instruction_file || 'No instruction file')}}</div></li>`).join('') : '<li class="catalog-meta">No AI agents are available.</li>';
   byId('chatList').innerHTML = visibleChats.length ? visibleChats.slice().reverse().map(chat => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(chat.title)}}</div><div class="catalog-meta">${{escapeHtml(chat.agent)}} / ${{escapeHtml(chat.summary)}}</div></li>`).join('') : `<li class="catalog-meta">${{agent ? `No chats tracked for ${{escapeHtml(agent.name)}}.` : 'No chat metadata imported. Transcripts are never collected automatically.'}}</li>`;
 }}
 
@@ -713,6 +726,7 @@ function applyMemory(nextMemory) {{
   modules = architecture.modules || [];
   maxFiles = Math.max(1, ...modules.map(module => Number(module.file_count || 0)));
   agents = memory.agents || [];
+  agentCatalog = memory.agent_catalog || agents;
   chats = memory.chats || [];
   history = memory.history || [];
   gitInfo = memory.git || {{is_repository:false, branch:'', remotes:[], commits:[], pushes:[]}};
@@ -727,7 +741,7 @@ function applyMemory(nextMemory) {{
   byId('fileCount').textContent = Number(summary.file_count || 0).toLocaleString();
   byId('linkCount').textContent = Number(graph.summary?.edge_count || 0).toLocaleString();
   byId('connectedCount').textContent = Number(graph.summary?.connected_files || 0).toLocaleString();
-  byId('agentCount').textContent = agents.length.toLocaleString();
+  byId('agentCount').textContent = agentCatalog.length.toLocaleString();
   byId('chatCount').textContent = chats.length.toLocaleString();
   byId('projectCount').textContent = projects.length.toLocaleString();
 
@@ -745,9 +759,8 @@ function applyMemory(nextMemory) {{
   renderModules();
   renderHistory();
 
-  byId('agentList').innerHTML = agents.length ? agents.map(agent => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(agent.name)}}</div><div class="catalog-meta">${{escapeHtml(agent.status || 'detected')}} / ${{escapeHtml(agent.instruction_file || 'No instruction file')}}</div></li>`).join('') : '<li class="catalog-meta">No AI agents detected. Run <code>enable-agent</code> to add one.</li>';
   byId('projectList').innerHTML = projects.length ? projects.map(item => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(item.name)}}</div><div class="catalog-meta">${{Number(item.file_count || 0)}} files / ${{Number(item.edge_count || 0)}} links<br>${{escapeHtml(item.path)}}</div></li>`).join('') : '<li class="catalog-meta">No projects tracked yet.</li>';
-  renderAgentSelection();
+  renderAgentSelection(activeAgentKey);
 
   byId('taskMeta').textContent = `${{activeTasks.length}} open`;
   byId('tasks').innerHTML = activeTasks.map(task => `<article class="task"><div class="task-state">${{escapeHtml(task.status || 'pending')}}</div><div class="task-title">${{escapeHtml(task.title)}}</div><div class="task-category">${{escapeHtml(task.category || 'General')}}</div></article>`).join('');
@@ -764,10 +777,14 @@ function applyMemory(nextMemory) {{
 byId('projectSelect').addEventListener('change', event => {{
   const choice = projectChoices.find(item => item.key === event.target.value);
   if (!choice) return;
-  if (choice.href) window.location.href = choice.href;
+  if (choice.href) {{
+    const target = new URL(choice.href, window.location.href);
+    if (activeAgentKey !== '__all__') target.searchParams.set('agent', activeAgentKey);
+    window.location.href = target.href;
+  }}
   else applyMemory(choice.memory);
 }});
-byId('agentSelect').addEventListener('change', renderAgentContext);
+byId('agentSelect').addEventListener('change', () => renderAgentContext(true));
 applyMemory(rootMemory);
 </script>
 </body>

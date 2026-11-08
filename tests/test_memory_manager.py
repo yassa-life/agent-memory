@@ -35,12 +35,15 @@ class ProjectMemoryTests(unittest.TestCase):
         self.assertIn("Edit history", dashboard)
         self.assertIn('id="projectSelect"', dashboard)
         self.assertIn('id="agentSelect"', dashboard)
+        self.assertIn("All AI agents", dashboard)
+        self.assertIn("activeAgentKey", dashboard)
         self.assertIn('id="graphZoomIn"', dashboard)
         self.assertIn('id="graphFullscreen"', dashboard)
         self.assertIn('id="historyType"', dashboard)
         self.assertIn('value="commit"', dashboard)
         self.assertIn('class="history-details"', dashboard)
         self.assertIn("pointermove", dashboard)
+        self.assertEqual(len(data["agent_catalog"]), 8)
 
     def test_scans_detailed_git_commit_history(self):
         subprocess.run(["git", "init", str(self.root)], check=True, capture_output=True)
@@ -137,7 +140,10 @@ class ProjectMemoryTests(unittest.TestCase):
             deep_records = memory_manager.sync_projects(self.root, manifest, deep_scan=True, max_files=100)
             self.assertEqual(len(deep_records), 1)
             project_id = deep_records[0]["id"]
-            self.assertTrue((self.root / ".agents/memory/projects" / f"{project_id}.json").exists())
+            snapshot_path = self.root / ".agents/memory/projects" / f"{project_id}.json"
+            self.assertTrue(snapshot_path.exists())
+            snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+            self.assertEqual(len(snapshot["agent_catalog"]), 8)
             self.assertTrue((self.root / ".agents/memory/projects" / f"{project_id}.html").exists())
             self.assertIn("dashboard_file", deep_records[0])
 

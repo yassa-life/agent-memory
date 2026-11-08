@@ -138,6 +138,21 @@ def detect_agents(root: Path, existing: list[dict[str, Any]]) -> list[dict[str, 
     return sorted(by_key.values(), key=lambda item: item.get("name", ""))
 
 
+def build_agent_catalog(agents: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    detected = {str(item.get("key") or item.get("id") or "").lower(): item for item in agents}
+    catalog: list[dict[str, Any]] = []
+    for key, (name, instruction_file) in AGENT_ADAPTERS.items():
+        current = detected.pop(key, {})
+        catalog.append({
+            "id": current.get("id", key), "key": key, "name": current.get("name", name),
+            "instruction_file": current.get("instruction_file", instruction_file),
+            "status": "connected" if current else "available", "connected": bool(current),
+        })
+    for current in detected.values():
+        catalog.append({**current, "status": current.get("status", "connected"), "connected": True})
+    return sorted(catalog, key=lambda item: str(item.get("name", "")).lower())
+
+
 def _git(root: Path, *args: str) -> str:
     try:
         result = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, encoding="utf-8", errors="ignore", timeout=20, check=False)
@@ -186,7 +201,7 @@ def default_memory(root: Path) -> dict[str, Any]:
         "project": {"name": root.name, "display_name": root.name.replace("_", " ").replace("-", " ").title(), "description": "", "root": ".", "created_at": now_iso(), "last_scanned": None},
         "summary": {}, "architecture": {"overview": "", "modules": []}, "entrypoints": [],
         "files": [], "graph": {"nodes": [], "edges": [], "summary": {}}, "history": [], "git": {"is_repository": False, "branch": "", "remotes": [], "commits": [], "pushes": []},
-        "agents": [], "chats": [], "projects": [], "decisions": [], "tasks": [], "notes": [],
+        "agents": [], "agent_catalog": build_agent_catalog([]), "chats": [], "projects": [], "decisions": [], "tasks": [], "notes": [],
     }
 
 
@@ -238,6 +253,7 @@ def scan(root: Path, description: str | None = None, max_files: int = 5000, disp
     data["entrypoints"] = infer_entrypoints(files)
     data["architecture"]["modules"] = infer_modules(files)
     data["agents"] = detect_agents(root, data["agents"])
+    data["agent_catalog"] = build_agent_catalog(data["agents"])
     data["summary"] = {
         "file_count": len(files), "total_bytes": sum(item["size_bytes"] for item in files), "scan_truncated": truncated,
         "edge_count": graph["summary"]["edge_count"], "connected_files": graph["summary"]["connected_files"], "changes": changes,
@@ -275,6 +291,7 @@ def scan_snapshot(root: Path, display_name: str | None = None, max_files: int = 
     data["entrypoints"] = infer_entrypoints(files)
     data["architecture"]["modules"] = infer_modules(files)
     data["agents"] = detect_agents(root, data["agents"])
+    data["agent_catalog"] = build_agent_catalog(data["agents"])
     data["summary"] = {"file_count": len(files), "total_bytes": sum(item["size_bytes"] for item in files), "scan_truncated": truncated, "edge_count": graph["summary"]["edge_count"], "connected_files": graph["summary"]["connected_files"], "changes": changes}
     if any(changes.values()) or not data["history"]:
         data["history"].append({"id": len(data["history"]) + 1, "scanned_at": scanned_at, **changes})
@@ -355,7 +372,7 @@ def track_project(root: Path, project_path: Path, description: str = "", display
         target_project, target_summary = target["project"], target["summary"]
     data = load_memory(root) or scan(root)
     projects = [item for item in data.get("projects", []) if Path(item.get("path", "")).resolve() != project_path]
-    snapshot = {key: target.get(key) for key in ("schema_version", "project", "summary", "architecture", "entrypoints", "graph", "history", "git", "agents", "chats", "decisions", "tasks", "notes")}
+    snapshot = {key: target.get(key) for key in ("schema_version", "project", "summary", "architecture", "entrypoints", "graph", "history", "git", "agents", "agent_catalog", "chats", "decisions", "tasks", "notes")}
     record = {"id": re.sub(r"[^a-z0-9]+", "-", (source_id or project_path.name).lower()).strip("-") or f"project-{len(projects)+1}", "name": display_name or target_project.get("display_name") or target_project.get("name") or project_path.name, "path": str(project_path), "description": description or target_project.get("description", ""), "last_scanned": target_project.get("last_scanned"), "file_count": target_summary.get("file_count", 0), "edge_count": target_summary.get("edge_count", 0), "tracked_at": now_iso(), "source": source, "source_id": source_id, "is_current": project_path == root, "snapshot": snapshot}
     projects.append(record); data["projects"] = sorted(projects, key=lambda item: item["name"].lower()); save_memory(root, data); return record
 

@@ -84,7 +84,7 @@ python .agents/memory/memory_manager.py import-chat chat.jsonl --agent Claude --
 
 Transcript text is not copied into memory or the dashboard. Agent Memory stores the title, agent, explicit summary, source path, size, line count, and dates. It never silently scans private chat folders.
 
-Use the dashboard's **AI agent** selector to change the active agent context and filter chats for that agent.
+Use the dashboard's **AI agent** selector to change the active agent context and filter the agent/chat catalog. Every project lists all supported agents, labels them as connected or available, and preserves the selected agent while moving between project dashboards. Project files and Git activity remain project-wide because those records cannot be reliably attributed to one AI agent.
 
 ## Install into a project
 
