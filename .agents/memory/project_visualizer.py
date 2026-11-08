@@ -106,6 +106,15 @@ a {{ color: inherit; }}
 .metric + .metric {{ border-left: 1px solid var(--rule); padding-left: 24px; }}
 .metric-value {{ font-size: clamp(30px, 3.2vw, 48px); font-weight: 650; line-height: 1; letter-spacing: -.045em; }}
 .metric-label {{ margin-top: 10px; color: var(--muted); font-size: 13px; }}
+.context-rail {{ display: grid; grid-template-columns: minmax(220px, .8fr) minmax(220px, .8fr) minmax(300px, 1.4fr); border-bottom: 1px solid var(--ink); background: var(--surface); }}
+.context-control {{ padding: 18px 22px 19px 0; }}
+.context-control + .context-control, .agent-context {{ border-left: 1px solid var(--rule); padding-left: 22px; }}
+.context-control label {{ display: block; color: var(--muted); font-size: 12px; margin-bottom: 7px; }}
+.context-control select {{ width: 100%; border: 0; border-bottom: 1px solid var(--ink); border-radius: 0; background: transparent; color: var(--ink); padding: 5px 26px 7px 0; font-weight: 650; outline: none; }}
+.context-control select:focus {{ border-bottom: 3px solid var(--cobalt); padding-bottom: 5px; }}
+.agent-context {{ padding-top: 18px; padding-bottom: 18px; align-self: stretch; }}
+.agent-context strong {{ display: block; }}
+.agent-context span {{ display: block; color: var(--muted); font-size: 12px; margin-top: 4px; overflow-wrap: anywhere; }}
 .workspace {{ display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 64px; padding-top: 48px; }}
 .index {{ align-self: start; position: sticky; top: 28px; }}
 .index-block {{ padding: 0 0 28px; margin-bottom: 28px; border-bottom: 1px solid var(--rule); }}
@@ -222,6 +231,8 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
   .metric:nth-child(4) {{ border-left: 0; }}
   .metric:nth-child(n+4) {{ border-top: 1px solid var(--rule); }}
   .workspace {{ grid-template-columns: 1fr; gap: 30px; }}
+  .context-rail {{ grid-template-columns: 1fr 1fr; }}
+  .agent-context {{ grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--rule); padding-left: 0; }}
   .index {{ position: static; display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }}
 }}
 @media (max-width: 620px) {{
@@ -230,6 +241,9 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
   .project-name {{ font-size: 48px; }}
   .snapshot {{ margin-top: 30px; gap: 8px; }}
   .metrics {{ grid-template-columns: 1fr 1fr; }}
+  .context-rail {{ grid-template-columns: 1fr; }}
+  .context-control + .context-control, .agent-context {{ border-left: 0; border-top: 1px solid var(--rule); padding-left: 0; }}
+  .agent-context {{ grid-column: auto; }}
   .metric:nth-child(odd) {{ border-left: 0; }}
   .metric:nth-child(n+3) {{ border-top: 1px solid var(--rule); }}
   .metric {{ min-height: 112px; padding: 18px 12px 18px 0; }}
@@ -277,6 +291,12 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
     <div class="metric"><div class="metric-value" id="agentCount">0</div><div class="metric-label">AI agents</div></div>
     <div class="metric"><div class="metric-value" id="chatCount">0</div><div class="metric-label">Tracked chats</div></div>
     <div class="metric"><div class="metric-value" id="projectCount">0</div><div class="metric-label">Tracked projects</div></div>
+  </section>
+
+  <section class="context-rail" aria-label="Active memory context">
+    <div class="context-control"><label for="projectSelect">Project</label><select id="projectSelect"></select></div>
+    <div class="context-control"><label for="agentSelect">AI agent</label><select id="agentSelect"></select></div>
+    <div class="agent-context" id="agentContext"><strong>No agent selected</strong><span>Choose an agent to view its instruction and chat context.</span></div>
   </section>
 
   <div class="workspace">
@@ -375,7 +395,8 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
   <footer class="footer"><span><strong>Agent Memory</strong> / local-first relationship context for any AI agent</span><span>File contents and transcript text are never embedded in this dashboard.</span></footer>
 </div>
 <script>
-const memory = {payload};
+let memory = {payload};
+const rootMemory = memory;
 const byId = id => document.getElementById(id);
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[character]));
 const formatBytes = bytes => {{
@@ -390,13 +411,13 @@ const formatDate = value => {{
   return Number.isNaN(date.valueOf()) ? `Last scanned ${{value}}` : `Last scanned ${{new Intl.DateTimeFormat(undefined, {{dateStyle:'medium', timeStyle:'short'}}).format(date)}}`;
 }};
 
-const project = memory.project || {{}};
-const summary = memory.summary || {{}};
-const architecture = memory.architecture || {{}};
-const graph = memory.graph || {{nodes:[], edges:[], summary:{{}}}};
-const activeTasks = (memory.tasks || []).filter(task => !['done','completed','cancelled'].includes(String(task.status || 'pending').toLowerCase()));
-const modules = architecture.modules || [];
-const maxFiles = Math.max(1, ...modules.map(module => Number(module.file_count || 0)));
+let project = memory.project || {{}};
+let summary = memory.summary || {{}};
+let architecture = memory.architecture || {{}};
+let graph = memory.graph || {{nodes:[], edges:[], summary:{{}}}};
+let activeTasks = (memory.tasks || []).filter(task => !['done','completed','cancelled'].includes(String(task.status || 'pending').toLowerCase()));
+let modules = architecture.modules || [];
+let maxFiles = Math.max(1, ...modules.map(module => Number(module.file_count || 0)));
 
 byId('projectName').textContent = project.display_name || project.name || 'Untitled project';
 byId('projectDescription').textContent = project.description || architecture.overview || 'Project structure, decisions, and active work in one durable index.';
@@ -492,14 +513,14 @@ function renderModules(query = '') {{
 renderModules();
 byId('moduleSearch').addEventListener('input', event => renderModules(event.target.value));
 
-const agents = memory.agents || [];
+let agents = memory.agents || [];
 byId('agentList').innerHTML = agents.length ? agents.map(agent => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(agent.name)}}</div><div class="catalog-meta">${{escapeHtml(agent.status || 'detected')}} / ${{escapeHtml(agent.instruction_file || 'No instruction file')}}</div></li>`).join('') : '<li class="catalog-meta">No AI agents detected. Run <code>enable-agent</code> to add one.</li>';
-const projects = memory.projects || [];
+let projects = memory.projects || [];
 byId('projectList').innerHTML = projects.length ? projects.map(item => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(item.name)}}</div><div class="catalog-meta">${{Number(item.file_count || 0)}} files / ${{Number(item.edge_count || 0)}} links<br>${{escapeHtml(item.path)}}</div></li>`).join('') : '<li class="catalog-meta">No projects tracked yet.</li>';
-const chats = memory.chats || [];
+let chats = memory.chats || [];
 byId('chatList').innerHTML = chats.length ? chats.slice().reverse().map(chat => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(chat.title)}}</div><div class="catalog-meta">${{escapeHtml(chat.agent)}} / ${{escapeHtml(chat.summary)}}</div></li>`).join('') : '<li class="catalog-meta">No chat metadata imported. Transcripts are never collected automatically.</li>';
 
-const history = memory.history || [];
+let history = memory.history || [];
 function renderHistory(date = '') {{
   const visible = history.slice().reverse().filter(event => !date || String(event.scanned_at || '').startsWith(date));
   byId('historyList').innerHTML = visible.map(event => {{
@@ -518,18 +539,107 @@ byId('taskMeta').textContent = `${{activeTasks.length}} open`;
 byId('tasks').innerHTML = activeTasks.map(task => `<article class="task"><div class="task-state">${{escapeHtml(task.status || 'pending')}}</div><div class="task-title">${{escapeHtml(task.title)}}</div><div class="task-category">${{escapeHtml(task.category || 'General')}}</div></article>`).join('');
 byId('taskEmpty').hidden = activeTasks.length !== 0;
 
-const decisions = memory.decisions || [];
+let decisions = memory.decisions || [];
 byId('decisionList').innerHTML = decisions.map(decision => `<article class="decision"><div class="decision-title">${{escapeHtml(decision.title)}}</div><div class="decision-rationale">${{escapeHtml(decision.rationale)}}</div></article>`).join('');
 byId('decisionEmpty').hidden = decisions.length !== 0;
 
-const notes = memory.notes || [];
+let notes = memory.notes || [];
 byId('noteList').innerHTML = notes.map(note => `<article class="note"><div class="note-id">Note ${{escapeHtml(note.id)}}</div><div>${{escapeHtml(note.text)}}</div></article>`).join('');
 byId('noteEmpty').hidden = notes.length !== 0;
 
-const changes = summary.changes || {{}};
+let changes = summary.changes || {{}};
 byId('addedCount').textContent = (changes.added || []).length.toLocaleString();
 byId('changedCount').textContent = (changes.changed || []).length.toLocaleString();
 byId('removedCount').textContent = (changes.removed || []).length.toLocaleString();
+
+const projectChoices = [
+  {{key: '__current__', name: rootMemory.project?.display_name || rootMemory.project?.name || 'Current project', memory: rootMemory}},
+  ...(rootMemory.projects || []).filter(item => item.snapshot && !item.is_current).map((item, index) => ({{key: `tracked-${{index}}`, name: item.name, memory: item.snapshot}}))
+];
+byId('projectSelect').innerHTML = projectChoices.map(choice => `<option value="${{escapeHtml(choice.key)}}">${{escapeHtml(choice.name)}}</option>`).join('');
+
+function renderAgentSelection(preferred = '__all__') {{
+  const options = [`<option value="__all__">All agents</option>`, ...agents.map(agent => `<option value="${{escapeHtml(agent.key || agent.id || agent.name)}}">${{escapeHtml(agent.name)}}</option>`)];
+  byId('agentSelect').innerHTML = options.join('');
+  const valid = [...byId('agentSelect').options].some(option => option.value === preferred);
+  byId('agentSelect').value = valid ? preferred : '__all__';
+  renderAgentContext();
+}}
+
+function renderAgentContext() {{
+  const selected = byId('agentSelect').value;
+  const agent = agents.find(item => String(item.key || item.id || item.name) === selected);
+  const visibleChats = agent ? chats.filter(chat => String(chat.agent || '').toLowerCase() === String(agent.name || '').toLowerCase()) : chats;
+  if (agent) {{
+    byId('agentContext').innerHTML = `<strong>${{escapeHtml(agent.name)}}</strong><span>${{escapeHtml(agent.status || 'detected')}} / ${{escapeHtml(agent.instruction_file || 'No instruction file')}} / ${{visibleChats.length}} tracked chats</span>`;
+  }} else {{
+    byId('agentContext').innerHTML = `<strong>All agents</strong><span>${{agents.length}} available in this project / ${{chats.length}} tracked chats</span>`;
+  }}
+  byId('chatList').innerHTML = visibleChats.length ? visibleChats.slice().reverse().map(chat => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(chat.title)}}</div><div class="catalog-meta">${{escapeHtml(chat.agent)}} / ${{escapeHtml(chat.summary)}}</div></li>`).join('') : `<li class="catalog-meta">${{agent ? `No chats tracked for ${{escapeHtml(agent.name)}}.` : 'No chat metadata imported. Transcripts are never collected automatically.'}}</li>`;
+}}
+
+function applyMemory(nextMemory) {{
+  memory = nextMemory || {{}};
+  project = memory.project || {{}};
+  summary = memory.summary || {{}};
+  architecture = memory.architecture || {{}};
+  graph = memory.graph || {{nodes:[], edges:[], summary:{{}}}};
+  activeTasks = (memory.tasks || []).filter(task => !['done','completed','cancelled'].includes(String(task.status || 'pending').toLowerCase()));
+  modules = architecture.modules || [];
+  maxFiles = Math.max(1, ...modules.map(module => Number(module.file_count || 0)));
+  agents = memory.agents || [];
+  chats = memory.chats || [];
+  history = memory.history || [];
+  decisions = memory.decisions || [];
+  notes = memory.notes || [];
+  changes = summary.changes || {{}};
+  projects = rootMemory.projects || [];
+
+  byId('projectName').textContent = project.display_name || project.name || 'Untitled project';
+  byId('projectDescription').textContent = project.description || architecture.overview || 'Project structure, decisions, and active work in one durable index.';
+  byId('updated').textContent = formatDate(project.last_scanned);
+  byId('fileCount').textContent = Number(summary.file_count || 0).toLocaleString();
+  byId('linkCount').textContent = Number(graph.summary?.edge_count || 0).toLocaleString();
+  byId('connectedCount').textContent = Number(graph.summary?.connected_files || 0).toLocaleString();
+  byId('agentCount').textContent = agents.length.toLocaleString();
+  byId('chatCount').textContent = chats.length.toLocaleString();
+  byId('projectCount').textContent = projects.length.toLocaleString();
+
+  const stack = project.tech_stack || [];
+  byId('stack').innerHTML = stack.length ? stack.map(item => `<span class="stack-item">${{escapeHtml(item)}}</span>`).join('') : '<span class="section-meta">Not detected</span>';
+  const entrypoints = memory.entrypoints || [];
+  byId('entrypoints').innerHTML = entrypoints.length ? entrypoints.map(path => `<li><code>${{escapeHtml(path)}}</code></li>`).join('') : '<li class="section-meta">No entrypoints detected</li>';
+
+  byId('graphSearch').value = '';
+  byId('moduleSearch').value = '';
+  byId('historyDate').value = '';
+  byId('graphDetail').innerHTML = '<div><strong>Select a file node</strong><div class="graph-detail-meta">Choose a node to inspect its path, type, and connections.</div></div>';
+  renderGraph();
+  renderModules();
+  renderHistory();
+
+  byId('agentList').innerHTML = agents.length ? agents.map(agent => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(agent.name)}}</div><div class="catalog-meta">${{escapeHtml(agent.status || 'detected')}} / ${{escapeHtml(agent.instruction_file || 'No instruction file')}}</div></li>`).join('') : '<li class="catalog-meta">No AI agents detected. Run <code>enable-agent</code> to add one.</li>';
+  byId('projectList').innerHTML = projects.length ? projects.map(item => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(item.name)}}</div><div class="catalog-meta">${{Number(item.file_count || 0)}} files / ${{Number(item.edge_count || 0)}} links<br>${{escapeHtml(item.path)}}</div></li>`).join('') : '<li class="catalog-meta">No projects tracked yet.</li>';
+  renderAgentSelection();
+
+  byId('taskMeta').textContent = `${{activeTasks.length}} open`;
+  byId('tasks').innerHTML = activeTasks.map(task => `<article class="task"><div class="task-state">${{escapeHtml(task.status || 'pending')}}</div><div class="task-title">${{escapeHtml(task.title)}}</div><div class="task-category">${{escapeHtml(task.category || 'General')}}</div></article>`).join('');
+  byId('taskEmpty').hidden = activeTasks.length !== 0;
+  byId('decisionList').innerHTML = decisions.map(decision => `<article class="decision"><div class="decision-title">${{escapeHtml(decision.title)}}</div><div class="decision-rationale">${{escapeHtml(decision.rationale)}}</div></article>`).join('');
+  byId('decisionEmpty').hidden = decisions.length !== 0;
+  byId('noteList').innerHTML = notes.map(note => `<article class="note"><div class="note-id">Note ${{escapeHtml(note.id)}}</div><div>${{escapeHtml(note.text)}}</div></article>`).join('');
+  byId('noteEmpty').hidden = notes.length !== 0;
+  byId('addedCount').textContent = (changes.added || []).length.toLocaleString();
+  byId('changedCount').textContent = (changes.changed || []).length.toLocaleString();
+  byId('removedCount').textContent = (changes.removed || []).length.toLocaleString();
+}}
+
+byId('projectSelect').addEventListener('change', event => {{
+  const choice = projectChoices.find(item => item.key === event.target.value);
+  if (choice) applyMemory(choice.memory);
+}});
+byId('agentSelect').addEventListener('change', renderAgentContext);
+applyMemory(rootMemory);
 </script>
 </body>
 </html>'''

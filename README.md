@@ -58,6 +58,8 @@ Track another initialized project:
 python .agents/memory/memory_manager.py track-project D:\path\to\project
 ```
 
+The command embeds a metadata-only snapshot in the current dashboard. Use the **Project** selector below the dashboard metrics to switch its graph, history, tasks, decisions, agents, and chats. Re-run `track-project` when the other project's memory changes.
+
 Import chat metadata with an explicit summary:
 
 ```text
@@ -65,6 +67,8 @@ python .agents/memory/memory_manager.py import-chat chat.jsonl --agent Claude --
 ```
 
 Transcript text is not copied into memory or the dashboard. Agent Memory stores the title, agent, explicit summary, source path, size, line count, and dates. It never silently scans private chat folders.
+
+Use the dashboard's **AI agent** selector to change the active agent context and filter chats for that agent.
 
 ## Install into a project
 

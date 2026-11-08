@@ -93,6 +93,15 @@ a { color: inherit; }
 .metric + .metric { border-left: 1px solid var(--rule); padding-left: 24px; }
 .metric-value { font-size: clamp(30px, 3.2vw, 48px); font-weight: 650; line-height: 1; letter-spacing: -.045em; }
 .metric-label { margin-top: 10px; color: var(--muted); font-size: 13px; }
+.context-rail { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(220px, .8fr) minmax(300px, 1.4fr); border-bottom: 1px solid var(--ink); background: var(--surface); }
+.context-control { padding: 18px 22px 19px 0; }
+.context-control + .context-control, .agent-context { border-left: 1px solid var(--rule); padding-left: 22px; }
+.context-control label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 7px; }
+.context-control select { width: 100%; border: 0; border-bottom: 1px solid var(--ink); border-radius: 0; background: transparent; color: var(--ink); padding: 5px 26px 7px 0; font-weight: 650; outline: none; }
+.context-control select:focus { border-bottom: 3px solid var(--cobalt); padding-bottom: 5px; }
+.agent-context { padding-top: 18px; padding-bottom: 18px; align-self: stretch; }
+.agent-context strong { display: block; }
+.agent-context span { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; overflow-wrap: anywhere; }
 .workspace { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 64px; padding-top: 48px; }
 .index { align-self: start; position: sticky; top: 28px; }
 .index-block { padding: 0 0 28px; margin-bottom: 28px; border-bottom: 1px solid var(--rule); }
@@ -209,6 +218,8 @@ code { font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; overf
   .metric:nth-child(4) { border-left: 0; }
   .metric:nth-child(n+4) { border-top: 1px solid var(--rule); }
   .workspace { grid-template-columns: 1fr; gap: 30px; }
+  .context-rail { grid-template-columns: 1fr 1fr; }
+  .agent-context { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--rule); padding-left: 0; }
   .index { position: static; display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
 }
 @media (max-width: 620px) {
@@ -217,6 +228,9 @@ code { font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; overf
   .project-name { font-size: 48px; }
   .snapshot { margin-top: 30px; gap: 8px; }
   .metrics { grid-template-columns: 1fr 1fr; }
+  .context-rail { grid-template-columns: 1fr; }
+  .context-control + .context-control, .agent-context { border-left: 0; border-top: 1px solid var(--rule); padding-left: 0; }
+  .agent-context { grid-column: auto; }
   .metric:nth-child(odd) { border-left: 0; }
   .metric:nth-child(n+3) { border-top: 1px solid var(--rule); }
   .metric { min-height: 112px; padding: 18px 12px 18px 0; }
@@ -264,6 +278,12 @@ code { font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; overf
     <div class="metric"><div class="metric-value" id="agentCount">0</div><div class="metric-label">AI agents</div></div>
     <div class="metric"><div class="metric-value" id="chatCount">0</div><div class="metric-label">Tracked chats</div></div>
     <div class="metric"><div class="metric-value" id="projectCount">0</div><div class="metric-label">Tracked projects</div></div>
+  </section>
+
+  <section class="context-rail" aria-label="Active memory context">
+    <div class="context-control"><label for="projectSelect">Project</label><select id="projectSelect"></select></div>
+    <div class="context-control"><label for="agentSelect">AI agent</label><select id="agentSelect"></select></div>
+    <div class="agent-context" id="agentContext"><strong>No agent selected</strong><span>Choose an agent to view its instruction and chat context.</span></div>
   </section>
 
   <div class="workspace">
@@ -362,7 +382,8 @@ code { font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; overf
   <footer class="footer"><span><strong>Agent Memory</strong> / local-first relationship context for any AI agent</span><span>File contents and transcript text are never embedded in this dashboard.</span></footer>
 </div>
 <script>
-const memory = {"schema_version": 3, "project": {"name": "Antigravity_memeory", "display_name": "Agent Memory", "description": "Relationship-aware, local-first memory for any AI coding agent. It maps files as connected nodes, tracks dated changes, and carries project context across models without storing source or transcript text.", "root": ".", "created_at": "2026-10-05", "last_scanned": "2026-11-08T11:56:00+05:30", "tech_stack": ["Python"]}, "summary": {"file_count": 14, "total_bytes": 85164, "scan_truncated": false, "edge_count": 4, "connected_files": 5, "changes": {"added": [], "changed": [".agents/memory/memory_manager.py", ".agents/memory/project_visualizer.py", ".agents/memory/relation_graph.py", ".agents/memory/server.py", "README.md", "tests/test_memory_manager.py"], "removed": []}}, "architecture": {"overview": "A dependency-free Python memory engine indexes project metadata, preserves human-approved tasks and decisions, generates compact Markdown context for agents, and produces an offline HTML dashboard. Agent instruction files integrate the same workflow with Codex and Antigravity/Gemini.", "modules": [{"name": ".agents", "file_count": 8, "sample_files": [".agents/hooks.json", ".agents/memory/memory_hook.py", ".agents/memory/memory_manager.py", ".agents/memory/project_visualizer.py", ".agents/memory/relation_graph.py", ".agents/memory/server.py", ".agents/rules/memory.md", ".agents/skills/project-memory/SKILL.md"]}, {"name": "root", "file_count": 5, "sample_files": [".gitignore", "AGENTS.md", "GEMINI.md", "README.md", "install_project_memory.py"]}, {"name": "tests", "file_count": 1, "sample_files": ["tests/test_memory_manager.py"]}]}, "entrypoints": ["README.md", ".agents/memory/server.py"], "files": [{"path": ".gitignore", "name": ".gitignore", "extension": "", "language": "File", "module": "root", "size_bytes": 200, "modified": "2026-11-07T10:25:56+00:00", "signature": "b83d5384b8f8e7ae"}, {"path": "AGENTS.md", "name": "AGENTS.md", "extension": ".md", "language": "Markdown", "module": "root", "size_bytes": 639, "modified": "2026-11-08T06:22:21+00:00", "signature": "9a6a1bca3980ae78"}, {"path": "GEMINI.md", "name": "GEMINI.md", "extension": ".md", "language": "Markdown", "module": "root", "size_bytes": 591, "modified": "2026-11-08T06:22:21+00:00", "signature": "d4ea7857df0c6ae5"}, {"path": "README.md", "name": "README.md", "extension": ".md", "language": "Markdown", "module": "root", "size_bytes": 5453, "modified": "2026-11-08T06:25:26+00:00", "signature": "0c5f16ddf4709882"}, {"path": "install_project_memory.py", "name": "install_project_memory.py", "extension": ".py", "language": "Python", "module": "root", "size_bytes": 2440, "modified": "2026-11-08T06:21:56+00:00", "signature": "4ef108a2f7472210"}, {"path": ".agents/hooks.json", "name": "hooks.json", "extension": ".json", "language": "JSON", "module": ".agents", "size_bytes": 498, "modified": "2026-10-05T08:18:25+00:00", "signature": "f0abee41abe25ebf"}, {"path": ".agents/memory/memory_hook.py", "name": "memory_hook.py", "extension": ".py", "language": "Python", "module": ".agents", "size_bytes": 1025, "modified": "2026-11-08T06:22:22+00:00", "signature": "e117f294ec37a483"}, {"path": ".agents/memory/memory_manager.py", "name": "memory_manager.py", "extension": ".py", "language": "Python", "module": ".agents", "size_bytes": 23228, "modified": "2026-11-08T06:25:25+00:00", "signature": "91e85b8797ee4c5c"}, {"path": ".agents/memory/project_visualizer.py", "name": "project_visualizer.py", "extension": ".py", "language": "Python", "module": ".agents", "size_bytes": 31435, "modified": "2026-11-08T06:24:29+00:00", "signature": "14160384bde01c24"}, {"path": ".agents/memory/relation_graph.py", "name": "relation_graph.py", "extension": ".py", "language": "Python", "module": ".agents", "size_bytes": 10663, "modified": "2026-11-08T06:24:57+00:00", "signature": "70a42ae56fc7f3f7"}, {"path": ".agents/memory/server.py", "name": "server.py", "extension": ".py", "language": "Python", "module": ".agents", "size_bytes": 1047, "modified": "2026-11-08T06:24:40+00:00", "signature": "b0a512a7121fca02"}, {"path": ".agents/rules/memory.md", "name": "memory.md", "extension": ".md", "language": "Markdown", "module": ".agents", "size_bytes": 881, "modified": "2026-11-08T06:22:22+00:00", "signature": "e990f6c3bff8dca3"}, {"path": ".agents/skills/project-memory/SKILL.md", "name": "SKILL.md", "extension": ".md", "language": "Markdown", "module": ".agents", "size_bytes": 1688, "modified": "2026-11-08T06:21:58+00:00", "signature": "4c159b3af35e86f0"}, {"path": "tests/test_memory_manager.py", "name": "test_memory_manager.py", "extension": ".py", "language": "Python", "module": "tests", "size_bytes": 5376, "modified": "2026-11-08T06:25:44+00:00", "signature": "2bb41b936ec3685c"}], "graph": {"nodes": [{"id": ".gitignore", "label": ".gitignore", "path": ".gitignore", "module": "root", "language": "File", "extension": "", "size_bytes": 200, "modified": "2026-11-07T10:25:56+00:00", "connections": 0}, {"id": "AGENTS.md", "label": "AGENTS.md", "path": "AGENTS.md", "module": "root", "language": "Markdown", "extension": ".md", "size_bytes": 639, "modified": "2026-11-08T06:22:21+00:00", "connections": 0}, {"id": "GEMINI.md", "label": "GEMINI.md", "path": "GEMINI.md", "module": "root", "language": "Markdown", "extension": ".md", "size_bytes": 591, "modified": "2026-11-08T06:22:21+00:00", "connections": 0}, {"id": "README.md", "label": "README.md", "path": "README.md", "module": "root", "language": "Markdown", "extension": ".md", "size_bytes": 5453, "modified": "2026-11-08T06:25:26+00:00", "connections": 0}, {"id": "install_project_memory.py", "label": "install_project_memory.py", "path": "install_project_memory.py", "module": "root", "language": "Python", "extension": ".py", "size_bytes": 2440, "modified": "2026-11-08T06:21:56+00:00", "connections": 0}, {"id": ".agents/hooks.json", "label": "hooks.json", "path": ".agents/hooks.json", "module": ".agents", "language": "JSON", "extension": ".json", "size_bytes": 498, "modified": "2026-10-05T08:18:25+00:00", "connections": 0}, {"id": ".agents/memory/memory_hook.py", "label": "memory_hook.py", "path": ".agents/memory/memory_hook.py", "module": ".agents", "language": "Python", "extension": ".py", "size_bytes": 1025, "modified": "2026-11-08T06:22:22+00:00", "connections": 1}, {"id": ".agents/memory/memory_manager.py", "label": "memory_manager.py", "path": ".agents/memory/memory_manager.py", "module": ".agents", "language": "Python", "extension": ".py", "size_bytes": 23228, "modified": "2026-11-08T06:25:25+00:00", "connections": 4}, {"id": ".agents/memory/project_visualizer.py", "label": "project_visualizer.py", "path": ".agents/memory/project_visualizer.py", "module": ".agents", "language": "Python", "extension": ".py", "size_bytes": 31435, "modified": "2026-11-08T06:24:29+00:00", "connections": 1}, {"id": ".agents/memory/relation_graph.py", "label": "relation_graph.py", "path": ".agents/memory/relation_graph.py", "module": ".agents", "language": "Python", "extension": ".py", "size_bytes": 10663, "modified": "2026-11-08T06:24:57+00:00", "connections": 1}, {"id": ".agents/memory/server.py", "label": "server.py", "path": ".agents/memory/server.py", "module": ".agents", "language": "Python", "extension": ".py", "size_bytes": 1047, "modified": "2026-11-08T06:24:40+00:00", "connections": 1}, {"id": ".agents/rules/memory.md", "label": "memory.md", "path": ".agents/rules/memory.md", "module": ".agents", "language": "Markdown", "extension": ".md", "size_bytes": 881, "modified": "2026-11-08T06:22:22+00:00", "connections": 0}, {"id": ".agents/skills/project-memory/SKILL.md", "label": "SKILL.md", "path": ".agents/skills/project-memory/SKILL.md", "module": ".agents", "language": "Markdown", "extension": ".md", "size_bytes": 1688, "modified": "2026-11-08T06:21:58+00:00", "connections": 0}, {"id": "tests/test_memory_manager.py", "label": "test_memory_manager.py", "path": "tests/test_memory_manager.py", "module": "tests", "language": "Python", "extension": ".py", "size_bytes": 5376, "modified": "2026-11-08T06:25:44+00:00", "connections": 0}], "edges": [{"source": ".agents/memory/memory_hook.py", "target": ".agents/memory/memory_manager.py", "kind": "import"}, {"source": ".agents/memory/memory_manager.py", "target": ".agents/memory/project_visualizer.py", "kind": "import"}, {"source": ".agents/memory/memory_manager.py", "target": ".agents/memory/relation_graph.py", "kind": "import"}, {"source": ".agents/memory/memory_manager.py", "target": ".agents/memory/server.py", "kind": "import"}], "summary": {"node_count": 14, "edge_count": 4, "connected_files": 5, "isolated_files": 9}}, "history": [{"id": 1, "scanned_at": "2026-11-08T11:52:36+05:30", "added": [".agents/memory/relation_graph.py"], "changed": [".agents/hooks.json", ".agents/memory/memory_hook.py", ".agents/memory/memory_manager.py", ".agents/memory/project_visualizer.py", ".agents/memory/server.py", ".agents/rules/memory.md", ".agents/skills/project-memory/SKILL.md", ".gitignore", "AGENTS.md", "GEMINI.md", "README.md", "install_project_memory.py", "tests/test_memory_manager.py"], "removed": []}, {"id": 2, "scanned_at": "2026-11-08T11:56:00+05:30", "added": [], "changed": [".agents/memory/memory_manager.py", ".agents/memory/project_visualizer.py", ".agents/memory/relation_graph.py", ".agents/memory/server.py", "README.md", "tests/test_memory_manager.py"], "removed": []}], "agents": [{"id": "antigravity", "key": "antigravity", "name": "Antigravity", "instruction_file": "GEMINI.md", "status": "detected", "added_at": "2026-11-08T11:52:36+05:30"}, {"id": "codex", "key": "codex", "name": "Codex", "instruction_file": "AGENTS.md", "status": "detected", "added_at": "2026-11-08T11:52:36+05:30"}, {"id": "gemini", "key": "gemini", "name": "Gemini", "instruction_file": "GEMINI.md", "status": "detected", "added_at": "2026-11-08T11:52:36+05:30"}], "chats": [], "projects": [{"id": "antigravity-memeory", "name": "Agent Memory", "path": "D:\\SLIIT\\projectr\\Antigravity_memeory", "description": "Relationship-aware, local-first memory for any AI coding agent. It maps files as connected nodes, tracks dated changes, and carries project context across models without storing source or transcript text.", "last_scanned": "2026-11-08T11:56:00+05:30", "file_count": 14, "edge_count": 4}], "decisions": [{"id": 1, "title": "Adopt Visual Antigravity Memory System", "date": "2026-10-05", "rationale": "Avoid spending unnecessary context tokens repeatedly scanning the filesystem by reading memory.json first."}, {"id": 2, "title": "Use project-local, agent-neutral memory", "rationale": "Portable metadata and explicit durable notes work across Codex, Antigravity, Gemini, and other agents without collecting private chat history.", "created_at": "2026-11-07T15:45:41+05:30"}, {"id": 3, "title": "Use a resolved file relationship graph", "rationale": "Agents can query relevant neighboring files without loading the full repository or relying on opaque embeddings.", "created_at": "2026-11-08T11:55:59+05:30"}, {"id": 4, "title": "Keep chat tracking explicit and summary-only", "rationale": "The product tracks useful conversation context without silently collecting or embedding private transcript text.", "created_at": "2026-11-08T11:56:00+05:30"}], "tasks": [{"id": 1, "title": "Initialize Project Memory System", "status": "completed", "category": "Setup"}, {"id": 2, "title": "Enforce Memory-First Context Rule for Antigravity", "status": "completed", "category": "Rules"}, {"id": 3, "title": "Render Visualizable Dashboard Embed", "status": "completed", "category": "UI"}], "notes": []};
+let memory = {"schema_version": 3, "project": {"name": "Antigravity_memeory", "display_name": "Agent Memory", "description": "Relationship-aware, local-first memory for any AI coding agent. It maps files as connected nodes, tracks dated changes, and carries project context across models without storing source or transcript text.", "root": ".", "created_at": "2026-10-05", "last_scanned": "2026-11-08T12:17:50+05:30", "tech_stack": ["Python"]}, "summary": {"file_count": 14, "total_bytes": 94865, "scan_truncated": false, "edge_count": 4, "connected_files": 5, "changes": {"added": [], "changed": [], "removed": []}}, "architecture": {"overview": "A dependency-free Python memory engine indexes project metadata, preserves human-approved tasks and decisions, generates compact Markdown context for agents, and produces an offline HTML dashboard. Agent instruction files integrate the same workflow with Codex and Antigravity/Gemini.", "modules": [{"name": ".agents", "file_count": 8, "sample_files": [".agents/hooks.json", ".agents/memory/memory_hook.py", ".agents/memory/memory_manager.py", ".agents/memory/project_visualizer.py", ".agents/memory/relation_graph.py", ".agents/memory/server.py", ".agents/rules/memory.md", ".agents/skills/project-memory/SKILL.md"]}, {"name": "root", "file_count": 5, "sample_files": [".gitignore", "AGENTS.md", "GEMINI.md", "README.md", "install_project_memory.py"]}, {"name": "tests", "file_count": 1, "sample_files": ["tests/test_memory_manager.py"]}]}, "entrypoints": ["README.md", ".agents/memory/server.py"], "files": [{"path": ".gitignore", "name": ".gitignore", "extension": "", "language": "File", "module": "root", "size_bytes": 200, "modified": "2026-11-07T10:25:56+00:00", "signature": "b83d5384b8f8e7ae"}, {"path": "AGENTS.md", "name": "AGENTS.md", "extension": ".md", "language": "Markdown", "module": "root", "size_bytes": 639, "modified": "2026-11-08T06:22:21+00:00", "signature": "9a6a1bca3980ae78"}, {"path": "GEMINI.md", "name": "GEMINI.md", "extension": ".md", "language": "Markdown", "module": "root", "size_bytes": 591, "modified": "2026-11-08T06:22:21+00:00", "signature": "d4ea7857df0c6ae5"}, {"path": "README.md", "name": "README.md", "extension": ".md", "language": "Markdown", "module": "root", "size_bytes": 5823, "modified": "2026-11-08T06:46:35+00:00", "signature": "01978f8080af0154"}, {"path": "install_project_memory.py", "name": "install_project_memory.py", "extension": ".py", "language": "Python", "module": "root", "size_bytes": 2440, "modified": "2026-11-08T06:21:56+00:00", "signature": "4ef108a2f7472210"}, {"path": ".agents/hooks.json", "name": "hooks.json", "extension": ".json", "language": "JSON", "module": ".agents", "size_bytes": 498, "modified": "2026-10-05T08:18:25+00:00", "signature": "f0abee41abe25ebf"}, {"path": ".agents/memory/memory_hook.py", "name": "memory_hook.py", "extension": ".py", "language": "Python", "module": ".agents", "size_bytes": 1025, "modified": "2026-11-08T06:22:22+00:00", "signature": "e117f294ec37a483"}, {"path": ".agents/memory/memory_manager.py", "name": "memory_manager.py", "extension": ".py", "language": "Python", "module": ".agents", "size_bytes": 23505, "modified": "2026-11-08T06:44:11+00:00", "signature": "1cc9f53c6a85df2c"}, {"path": ".agents/memory/project_visualizer.py", "name": "project_visualizer.py", "extension": ".py", "language": "Python", "module": ".agents", "size_bytes": 40207, "modified": "2026-11-08T06:46:05+00:00", "signature": "397c8d0727c0c329"}, {"path": ".agents/memory/relation_graph.py", "name": "relation_graph.py", "extension": ".py", "language": "Python", "module": ".agents", "size_bytes": 10663, "modified": "2026-11-08T06:24:57+00:00", "signature": "70a42ae56fc7f3f7"}, {"path": ".agents/memory/server.py", "name": "server.py", "extension": ".py", "language": "Python", "module": ".agents", "size_bytes": 1047, "modified": "2026-11-08T06:24:40+00:00", "signature": "b0a512a7121fca02"}, {"path": ".agents/rules/memory.md", "name": "memory.md", "extension": ".md", "language": "Markdown", "module": ".agents", "size_bytes": 881, "modified": "2026-11-08T06:22:22+00:00", "signature": "e990f6c3bff8dca3"}, {"path": ".agents/skills/project-memory/SKILL.md", "name": "SKILL.md", "extension": ".md", "language": "Markdown", "module": ".agents", "size_bytes": 1688, "modified": "2026-11-08T06:21:58+00:00", "signature": "4c159b3af35e86f0"}, {"path": "tests/test_memory_manager.py", "name": "test_memory_manager.py", "extension": ".py", "language": "Python", "module": "tests", "size_bytes": 5658, "modified": "2026-11-08T06:46:34+00:00", "signature": "ece3a343bca69aa1"}], "graph": {"nodes": [{"id": ".gitignore", "label": ".gitignore", "path": ".gitignore", "module": "root", "language": "File", "extension": "", "size_bytes": 200, "modified": "2026-11-07T10:25:56+00:00", "connections": 0}, {"id": "AGENTS.md", "label": "AGENTS.md", "path": "AGENTS.md", "module": "root", "language": "Markdown", "extension": ".md", "size_bytes": 639, "modified": "2026-11-08T06:22:21+00:00", "connections": 0}, {"id": "GEMINI.md", "label": "GEMINI.md", "path": "GEMINI.md", "module": "root", "language": "Markdown", "extension": ".md", "size_bytes": 591, "modified": "2026-11-08T06:22:21+00:00", "connections": 0}, {"id": "README.md", "label": "README.md", "path": "README.md", "module": "root", "language": "Markdown", "extension": ".md", "size_bytes": 5823, "modified": "2026-11-08T06:46:35+00:00", "connections": 0}, {"id": "install_project_memory.py", "label": "install_project_memory.py", "path": "install_project_memory.py", "module": "root", "language": "Python", "extension": ".py", "size_bytes": 2440, "modified": "2026-11-08T06:21:56+00:00", "connections": 0}, {"id": ".agents/hooks.json", "label": "hooks.json", "path": ".agents/hooks.json", "module": ".agents", "language": "JSON", "extension": ".json", "size_bytes": 498, "modified": "2026-10-05T08:18:25+00:00", "connections": 0}, {"id": ".agents/memory/memory_hook.py", "label": "memory_hook.py", "path": ".agents/memory/memory_hook.py", "module": ".agents", "language": "Python", "extension": ".py", "size_bytes": 1025, "modified": "2026-11-08T06:22:22+00:00", "connections": 1}, {"id": ".agents/memory/memory_manager.py", "label": "memory_manager.py", "path": ".agents/memory/memory_manager.py", "module": ".agents", "language": "Python", "extension": ".py", "size_bytes": 23505, "modified": "2026-11-08T06:44:11+00:00", "connections": 4}, {"id": ".agents/memory/project_visualizer.py", "label": "project_visualizer.py", "path": ".agents/memory/project_visualizer.py", "module": ".agents", "language": "Python", "extension": ".py", "size_bytes": 40207, "modified": "2026-11-08T06:46:05+00:00", "connections": 1}, {"id": ".agents/memory/relation_graph.py", "label": "relation_graph.py", "path": ".agents/memory/relation_graph.py", "module": ".agents", "language": "Python", "extension": ".py", "size_bytes": 10663, "modified": "2026-11-08T06:24:57+00:00", "connections": 1}, {"id": ".agents/memory/server.py", "label": "server.py", "path": ".agents/memory/server.py", "module": ".agents", "language": "Python", "extension": ".py", "size_bytes": 1047, "modified": "2026-11-08T06:24:40+00:00", "connections": 1}, {"id": ".agents/rules/memory.md", "label": "memory.md", "path": ".agents/rules/memory.md", "module": ".agents", "language": "Markdown", "extension": ".md", "size_bytes": 881, "modified": "2026-11-08T06:22:22+00:00", "connections": 0}, {"id": ".agents/skills/project-memory/SKILL.md", "label": "SKILL.md", "path": ".agents/skills/project-memory/SKILL.md", "module": ".agents", "language": "Markdown", "extension": ".md", "size_bytes": 1688, "modified": "2026-11-08T06:21:58+00:00", "connections": 0}, {"id": "tests/test_memory_manager.py", "label": "test_memory_manager.py", "path": "tests/test_memory_manager.py", "module": "tests", "language": "Python", "extension": ".py", "size_bytes": 5658, "modified": "2026-11-08T06:46:34+00:00", "connections": 0}], "edges": [{"source": ".agents/memory/memory_hook.py", "target": ".agents/memory/memory_manager.py", "kind": "import"}, {"source": ".agents/memory/memory_manager.py", "target": ".agents/memory/project_visualizer.py", "kind": "import"}, {"source": ".agents/memory/memory_manager.py", "target": ".agents/memory/relation_graph.py", "kind": "import"}, {"source": ".agents/memory/memory_manager.py", "target": ".agents/memory/server.py", "kind": "import"}], "summary": {"node_count": 14, "edge_count": 4, "connected_files": 5, "isolated_files": 9}}, "history": [{"id": 1, "scanned_at": "2026-11-08T11:52:36+05:30", "added": [".agents/memory/relation_graph.py"], "changed": [".agents/hooks.json", ".agents/memory/memory_hook.py", ".agents/memory/memory_manager.py", ".agents/memory/project_visualizer.py", ".agents/memory/server.py", ".agents/rules/memory.md", ".agents/skills/project-memory/SKILL.md", ".gitignore", "AGENTS.md", "GEMINI.md", "README.md", "install_project_memory.py", "tests/test_memory_manager.py"], "removed": []}, {"id": 2, "scanned_at": "2026-11-08T11:56:00+05:30", "added": [], "changed": [".agents/memory/memory_manager.py", ".agents/memory/project_visualizer.py", ".agents/memory/relation_graph.py", ".agents/memory/server.py", "README.md", "tests/test_memory_manager.py"], "removed": []}, {"id": 3, "scanned_at": "2026-11-08T12:16:44+05:30", "added": [], "changed": [".agents/memory/memory_manager.py", ".agents/memory/project_visualizer.py", "README.md", "tests/test_memory_manager.py"], "removed": []}], "agents": [{"id": "antigravity", "key": "antigravity", "name": "Antigravity", "instruction_file": "GEMINI.md", "status": "detected", "added_at": "2026-11-08T11:52:36+05:30"}, {"id": "codex", "key": "codex", "name": "Codex", "instruction_file": "AGENTS.md", "status": "detected", "added_at": "2026-11-08T11:52:36+05:30"}, {"id": "gemini", "key": "gemini", "name": "Gemini", "instruction_file": "GEMINI.md", "status": "detected", "added_at": "2026-11-08T11:52:36+05:30"}], "chats": [], "projects": [{"id": "antigravity-memeory", "name": "Agent Memory", "path": "D:\\SLIIT\\projectr\\Antigravity_memeory", "description": "Relationship-aware, local-first memory for any AI coding agent. It maps files as connected nodes, tracks dated changes, and carries project context across models without storing source or transcript text.", "last_scanned": "2026-11-08T12:17:50+05:30", "file_count": 14, "edge_count": 4, "is_current": true}], "decisions": [{"id": 1, "title": "Adopt Visual Antigravity Memory System", "date": "2026-10-05", "rationale": "Avoid spending unnecessary context tokens repeatedly scanning the filesystem by reading memory.json first."}, {"id": 2, "title": "Use project-local, agent-neutral memory", "rationale": "Portable metadata and explicit durable notes work across Codex, Antigravity, Gemini, and other agents without collecting private chat history.", "created_at": "2026-11-07T15:45:41+05:30"}, {"id": 3, "title": "Use a resolved file relationship graph", "rationale": "Agents can query relevant neighboring files without loading the full repository or relying on opaque embeddings.", "created_at": "2026-11-08T11:55:59+05:30"}, {"id": 4, "title": "Keep chat tracking explicit and summary-only", "rationale": "The product tracks useful conversation context without silently collecting or embedding private transcript text.", "created_at": "2026-11-08T11:56:00+05:30"}], "tasks": [{"id": 1, "title": "Initialize Project Memory System", "status": "completed", "category": "Setup"}, {"id": 2, "title": "Enforce Memory-First Context Rule for Antigravity", "status": "completed", "category": "Rules"}, {"id": 3, "title": "Render Visualizable Dashboard Embed", "status": "completed", "category": "UI"}], "notes": []};
+const rootMemory = memory;
 const byId = id => document.getElementById(id);
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
 const formatBytes = bytes => {
@@ -377,13 +398,13 @@ const formatDate = value => {
   return Number.isNaN(date.valueOf()) ? `Last scanned ${value}` : `Last scanned ${new Intl.DateTimeFormat(undefined, {dateStyle:'medium', timeStyle:'short'}).format(date)}`;
 };
 
-const project = memory.project || {};
-const summary = memory.summary || {};
-const architecture = memory.architecture || {};
-const graph = memory.graph || {nodes:[], edges:[], summary:{}};
-const activeTasks = (memory.tasks || []).filter(task => !['done','completed','cancelled'].includes(String(task.status || 'pending').toLowerCase()));
-const modules = architecture.modules || [];
-const maxFiles = Math.max(1, ...modules.map(module => Number(module.file_count || 0)));
+let project = memory.project || {};
+let summary = memory.summary || {};
+let architecture = memory.architecture || {};
+let graph = memory.graph || {nodes:[], edges:[], summary:{}};
+let activeTasks = (memory.tasks || []).filter(task => !['done','completed','cancelled'].includes(String(task.status || 'pending').toLowerCase()));
+let modules = architecture.modules || [];
+let maxFiles = Math.max(1, ...modules.map(module => Number(module.file_count || 0)));
 
 byId('projectName').textContent = project.display_name || project.name || 'Untitled project';
 byId('projectDescription').textContent = project.description || architecture.overview || 'Project structure, decisions, and active work in one durable index.';
@@ -479,14 +500,14 @@ function renderModules(query = '') {
 renderModules();
 byId('moduleSearch').addEventListener('input', event => renderModules(event.target.value));
 
-const agents = memory.agents || [];
+let agents = memory.agents || [];
 byId('agentList').innerHTML = agents.length ? agents.map(agent => `<li class="catalog-item"><div class="catalog-title">${escapeHtml(agent.name)}</div><div class="catalog-meta">${escapeHtml(agent.status || 'detected')} / ${escapeHtml(agent.instruction_file || 'No instruction file')}</div></li>`).join('') : '<li class="catalog-meta">No AI agents detected. Run <code>enable-agent</code> to add one.</li>';
-const projects = memory.projects || [];
+let projects = memory.projects || [];
 byId('projectList').innerHTML = projects.length ? projects.map(item => `<li class="catalog-item"><div class="catalog-title">${escapeHtml(item.name)}</div><div class="catalog-meta">${Number(item.file_count || 0)} files / ${Number(item.edge_count || 0)} links<br>${escapeHtml(item.path)}</div></li>`).join('') : '<li class="catalog-meta">No projects tracked yet.</li>';
-const chats = memory.chats || [];
+let chats = memory.chats || [];
 byId('chatList').innerHTML = chats.length ? chats.slice().reverse().map(chat => `<li class="catalog-item"><div class="catalog-title">${escapeHtml(chat.title)}</div><div class="catalog-meta">${escapeHtml(chat.agent)} / ${escapeHtml(chat.summary)}</div></li>`).join('') : '<li class="catalog-meta">No chat metadata imported. Transcripts are never collected automatically.</li>';
 
-const history = memory.history || [];
+let history = memory.history || [];
 function renderHistory(date = '') {
   const visible = history.slice().reverse().filter(event => !date || String(event.scanned_at || '').startsWith(date));
   byId('historyList').innerHTML = visible.map(event => {
@@ -505,18 +526,107 @@ byId('taskMeta').textContent = `${activeTasks.length} open`;
 byId('tasks').innerHTML = activeTasks.map(task => `<article class="task"><div class="task-state">${escapeHtml(task.status || 'pending')}</div><div class="task-title">${escapeHtml(task.title)}</div><div class="task-category">${escapeHtml(task.category || 'General')}</div></article>`).join('');
 byId('taskEmpty').hidden = activeTasks.length !== 0;
 
-const decisions = memory.decisions || [];
+let decisions = memory.decisions || [];
 byId('decisionList').innerHTML = decisions.map(decision => `<article class="decision"><div class="decision-title">${escapeHtml(decision.title)}</div><div class="decision-rationale">${escapeHtml(decision.rationale)}</div></article>`).join('');
 byId('decisionEmpty').hidden = decisions.length !== 0;
 
-const notes = memory.notes || [];
+let notes = memory.notes || [];
 byId('noteList').innerHTML = notes.map(note => `<article class="note"><div class="note-id">Note ${escapeHtml(note.id)}</div><div>${escapeHtml(note.text)}</div></article>`).join('');
 byId('noteEmpty').hidden = notes.length !== 0;
 
-const changes = summary.changes || {};
+let changes = summary.changes || {};
 byId('addedCount').textContent = (changes.added || []).length.toLocaleString();
 byId('changedCount').textContent = (changes.changed || []).length.toLocaleString();
 byId('removedCount').textContent = (changes.removed || []).length.toLocaleString();
+
+const projectChoices = [
+  {key: '__current__', name: rootMemory.project?.display_name || rootMemory.project?.name || 'Current project', memory: rootMemory},
+  ...(rootMemory.projects || []).filter(item => item.snapshot && !item.is_current).map((item, index) => ({key: `tracked-${index}`, name: item.name, memory: item.snapshot}))
+];
+byId('projectSelect').innerHTML = projectChoices.map(choice => `<option value="${escapeHtml(choice.key)}">${escapeHtml(choice.name)}</option>`).join('');
+
+function renderAgentSelection(preferred = '__all__') {
+  const options = [`<option value="__all__">All agents</option>`, ...agents.map(agent => `<option value="${escapeHtml(agent.key || agent.id || agent.name)}">${escapeHtml(agent.name)}</option>`)];
+  byId('agentSelect').innerHTML = options.join('');
+  const valid = [...byId('agentSelect').options].some(option => option.value === preferred);
+  byId('agentSelect').value = valid ? preferred : '__all__';
+  renderAgentContext();
+}
+
+function renderAgentContext() {
+  const selected = byId('agentSelect').value;
+  const agent = agents.find(item => String(item.key || item.id || item.name) === selected);
+  const visibleChats = agent ? chats.filter(chat => String(chat.agent || '').toLowerCase() === String(agent.name || '').toLowerCase()) : chats;
+  if (agent) {
+    byId('agentContext').innerHTML = `<strong>${escapeHtml(agent.name)}</strong><span>${escapeHtml(agent.status || 'detected')} / ${escapeHtml(agent.instruction_file || 'No instruction file')} / ${visibleChats.length} tracked chats</span>`;
+  } else {
+    byId('agentContext').innerHTML = `<strong>All agents</strong><span>${agents.length} available in this project / ${chats.length} tracked chats</span>`;
+  }
+  byId('chatList').innerHTML = visibleChats.length ? visibleChats.slice().reverse().map(chat => `<li class="catalog-item"><div class="catalog-title">${escapeHtml(chat.title)}</div><div class="catalog-meta">${escapeHtml(chat.agent)} / ${escapeHtml(chat.summary)}</div></li>`).join('') : `<li class="catalog-meta">${agent ? `No chats tracked for ${escapeHtml(agent.name)}.` : 'No chat metadata imported. Transcripts are never collected automatically.'}</li>`;
+}
+
+function applyMemory(nextMemory) {
+  memory = nextMemory || {};
+  project = memory.project || {};
+  summary = memory.summary || {};
+  architecture = memory.architecture || {};
+  graph = memory.graph || {nodes:[], edges:[], summary:{}};
+  activeTasks = (memory.tasks || []).filter(task => !['done','completed','cancelled'].includes(String(task.status || 'pending').toLowerCase()));
+  modules = architecture.modules || [];
+  maxFiles = Math.max(1, ...modules.map(module => Number(module.file_count || 0)));
+  agents = memory.agents || [];
+  chats = memory.chats || [];
+  history = memory.history || [];
+  decisions = memory.decisions || [];
+  notes = memory.notes || [];
+  changes = summary.changes || {};
+  projects = rootMemory.projects || [];
+
+  byId('projectName').textContent = project.display_name || project.name || 'Untitled project';
+  byId('projectDescription').textContent = project.description || architecture.overview || 'Project structure, decisions, and active work in one durable index.';
+  byId('updated').textContent = formatDate(project.last_scanned);
+  byId('fileCount').textContent = Number(summary.file_count || 0).toLocaleString();
+  byId('linkCount').textContent = Number(graph.summary?.edge_count || 0).toLocaleString();
+  byId('connectedCount').textContent = Number(graph.summary?.connected_files || 0).toLocaleString();
+  byId('agentCount').textContent = agents.length.toLocaleString();
+  byId('chatCount').textContent = chats.length.toLocaleString();
+  byId('projectCount').textContent = projects.length.toLocaleString();
+
+  const stack = project.tech_stack || [];
+  byId('stack').innerHTML = stack.length ? stack.map(item => `<span class="stack-item">${escapeHtml(item)}</span>`).join('') : '<span class="section-meta">Not detected</span>';
+  const entrypoints = memory.entrypoints || [];
+  byId('entrypoints').innerHTML = entrypoints.length ? entrypoints.map(path => `<li><code>${escapeHtml(path)}</code></li>`).join('') : '<li class="section-meta">No entrypoints detected</li>';
+
+  byId('graphSearch').value = '';
+  byId('moduleSearch').value = '';
+  byId('historyDate').value = '';
+  byId('graphDetail').innerHTML = '<div><strong>Select a file node</strong><div class="graph-detail-meta">Choose a node to inspect its path, type, and connections.</div></div>';
+  renderGraph();
+  renderModules();
+  renderHistory();
+
+  byId('agentList').innerHTML = agents.length ? agents.map(agent => `<li class="catalog-item"><div class="catalog-title">${escapeHtml(agent.name)}</div><div class="catalog-meta">${escapeHtml(agent.status || 'detected')} / ${escapeHtml(agent.instruction_file || 'No instruction file')}</div></li>`).join('') : '<li class="catalog-meta">No AI agents detected. Run <code>enable-agent</code> to add one.</li>';
+  byId('projectList').innerHTML = projects.length ? projects.map(item => `<li class="catalog-item"><div class="catalog-title">${escapeHtml(item.name)}</div><div class="catalog-meta">${Number(item.file_count || 0)} files / ${Number(item.edge_count || 0)} links<br>${escapeHtml(item.path)}</div></li>`).join('') : '<li class="catalog-meta">No projects tracked yet.</li>';
+  renderAgentSelection();
+
+  byId('taskMeta').textContent = `${activeTasks.length} open`;
+  byId('tasks').innerHTML = activeTasks.map(task => `<article class="task"><div class="task-state">${escapeHtml(task.status || 'pending')}</div><div class="task-title">${escapeHtml(task.title)}</div><div class="task-category">${escapeHtml(task.category || 'General')}</div></article>`).join('');
+  byId('taskEmpty').hidden = activeTasks.length !== 0;
+  byId('decisionList').innerHTML = decisions.map(decision => `<article class="decision"><div class="decision-title">${escapeHtml(decision.title)}</div><div class="decision-rationale">${escapeHtml(decision.rationale)}</div></article>`).join('');
+  byId('decisionEmpty').hidden = decisions.length !== 0;
+  byId('noteList').innerHTML = notes.map(note => `<article class="note"><div class="note-id">Note ${escapeHtml(note.id)}</div><div>${escapeHtml(note.text)}</div></article>`).join('');
+  byId('noteEmpty').hidden = notes.length !== 0;
+  byId('addedCount').textContent = (changes.added || []).length.toLocaleString();
+  byId('changedCount').textContent = (changes.changed || []).length.toLocaleString();
+  byId('removedCount').textContent = (changes.removed || []).length.toLocaleString();
+}
+
+byId('projectSelect').addEventListener('change', event => {
+  const choice = projectChoices.find(item => item.key === event.target.value);
+  if (choice) applyMemory(choice.memory);
+});
+byId('agentSelect').addEventListener('change', renderAgentContext);
+applyMemory(rootMemory);
 </script>
 </body>
 </html>

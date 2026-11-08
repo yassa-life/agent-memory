@@ -165,6 +165,7 @@ def _update_project_catalog(data: dict[str, Any], root: Path) -> None:
         "name": data["project"].get("display_name") or data["project"]["name"], "path": str(root),
         "description": data["project"].get("description", ""), "last_scanned": data["project"]["last_scanned"],
         "file_count": data["summary"].get("file_count", 0), "edge_count": graph_summary.get("edge_count", 0),
+        "is_current": True,
     })
     data["projects"] = sorted(projects, key=lambda item: item.get("name", "").lower())
 
@@ -271,7 +272,8 @@ def track_project(root: Path, project_path: Path, description: str = "") -> dict
     target_project, target_summary = target.get("project", {}), target.get("summary", {})
     data = load_memory(root) or scan(root)
     projects = [item for item in data.get("projects", []) if Path(item.get("path", "")).resolve() != project_path]
-    record = {"id": re.sub(r"[^a-z0-9]+", "-", project_path.name.lower()).strip("-") or f"project-{len(projects)+1}", "name": target_project.get("display_name") or target_project.get("name") or project_path.name, "path": str(project_path), "description": description or target_project.get("description", ""), "last_scanned": target_project.get("last_scanned"), "file_count": target_summary.get("file_count", 0), "edge_count": target_summary.get("edge_count", 0), "tracked_at": now_iso()}
+    snapshot = {key: target.get(key) for key in ("schema_version", "project", "summary", "architecture", "entrypoints", "graph", "history", "agents", "chats", "decisions", "tasks", "notes")}
+    record = {"id": re.sub(r"[^a-z0-9]+", "-", project_path.name.lower()).strip("-") or f"project-{len(projects)+1}", "name": target_project.get("display_name") or target_project.get("name") or project_path.name, "path": str(project_path), "description": description or target_project.get("description", ""), "last_scanned": target_project.get("last_scanned"), "file_count": target_summary.get("file_count", 0), "edge_count": target_summary.get("edge_count", 0), "tracked_at": now_iso(), "is_current": project_path == root, "snapshot": snapshot}
     projects.append(record); data["projects"] = sorted(projects, key=lambda item: item["name"].lower()); save_memory(root, data); return record
 
 

@@ -31,6 +31,8 @@ class ProjectMemoryTests(unittest.TestCase):
         dashboard = (self.root / ".agents/memory/visualizer.html").read_text(encoding="utf-8")
         self.assertIn("File relationship graph", dashboard)
         self.assertIn("Edit history", dashboard)
+        self.assertIn('id="projectSelect"', dashboard)
+        self.assertIn('id="agentSelect"', dashboard)
 
     def test_scan_preserves_durable_records(self):
         memory_manager.scan(self.root)
@@ -95,6 +97,9 @@ class ProjectMemoryTests(unittest.TestCase):
             record = memory_manager.track_project(self.root, other)
             self.assertEqual(record["name"], "Other project")
             self.assertEqual(record["file_count"], 1)
+            self.assertIn("graph", record["snapshot"])
+            self.assertNotIn("files", record["snapshot"])
+            self.assertNotIn("projects", record["snapshot"])
 
 
 if __name__ == "__main__":

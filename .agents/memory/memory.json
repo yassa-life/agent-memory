@@ -6,27 +6,20 @@
     "description": "Relationship-aware, local-first memory for any AI coding agent. It maps files as connected nodes, tracks dated changes, and carries project context across models without storing source or transcript text.",
     "root": ".",
     "created_at": "2026-10-05",
-    "last_scanned": "2026-11-08T11:56:00+05:30",
+    "last_scanned": "2026-11-08T12:17:50+05:30",
     "tech_stack": [
       "Python"
     ]
   },
   "summary": {
     "file_count": 14,
-    "total_bytes": 85164,
+    "total_bytes": 94865,
     "scan_truncated": false,
     "edge_count": 4,
     "connected_files": 5,
     "changes": {
       "added": [],
-      "changed": [
-        ".agents/memory/memory_manager.py",
-        ".agents/memory/project_visualizer.py",
-        ".agents/memory/relation_graph.py",
-        ".agents/memory/server.py",
-        "README.md",
-        "tests/test_memory_manager.py"
-      ],
+      "changed": [],
       "removed": []
     }
   },
@@ -108,9 +101,9 @@
       "extension": ".md",
       "language": "Markdown",
       "module": "root",
-      "size_bytes": 5453,
-      "modified": "2026-11-08T06:25:26+00:00",
-      "signature": "0c5f16ddf4709882"
+      "size_bytes": 5823,
+      "modified": "2026-11-08T06:46:35+00:00",
+      "signature": "01978f8080af0154"
     },
     {
       "path": "install_project_memory.py",
@@ -148,9 +141,9 @@
       "extension": ".py",
       "language": "Python",
       "module": ".agents",
-      "size_bytes": 23228,
-      "modified": "2026-11-08T06:25:25+00:00",
-      "signature": "91e85b8797ee4c5c"
+      "size_bytes": 23505,
+      "modified": "2026-11-08T06:44:11+00:00",
+      "signature": "1cc9f53c6a85df2c"
     },
     {
       "path": ".agents/memory/project_visualizer.py",
@@ -158,9 +151,9 @@
       "extension": ".py",
       "language": "Python",
       "module": ".agents",
-      "size_bytes": 31435,
-      "modified": "2026-11-08T06:24:29+00:00",
-      "signature": "14160384bde01c24"
+      "size_bytes": 40207,
+      "modified": "2026-11-08T06:46:05+00:00",
+      "signature": "397c8d0727c0c329"
     },
     {
       "path": ".agents/memory/relation_graph.py",
@@ -208,9 +201,9 @@
       "extension": ".py",
       "language": "Python",
       "module": "tests",
-      "size_bytes": 5376,
-      "modified": "2026-11-08T06:25:44+00:00",
-      "signature": "2bb41b936ec3685c"
+      "size_bytes": 5658,
+      "modified": "2026-11-08T06:46:34+00:00",
+      "signature": "ece3a343bca69aa1"
     }
   ],
   "graph": {
@@ -255,8 +248,8 @@
         "module": "root",
         "language": "Markdown",
         "extension": ".md",
-        "size_bytes": 5453,
-        "modified": "2026-11-08T06:25:26+00:00",
+        "size_bytes": 5823,
+        "modified": "2026-11-08T06:46:35+00:00",
         "connections": 0
       },
       {
@@ -299,8 +292,8 @@
         "module": ".agents",
         "language": "Python",
         "extension": ".py",
-        "size_bytes": 23228,
-        "modified": "2026-11-08T06:25:25+00:00",
+        "size_bytes": 23505,
+        "modified": "2026-11-08T06:44:11+00:00",
         "connections": 4
       },
       {
@@ -310,8 +303,8 @@
         "module": ".agents",
         "language": "Python",
         "extension": ".py",
-        "size_bytes": 31435,
-        "modified": "2026-11-08T06:24:29+00:00",
+        "size_bytes": 40207,
+        "modified": "2026-11-08T06:46:05+00:00",
         "connections": 1
       },
       {
@@ -365,8 +358,8 @@
         "module": "tests",
         "language": "Python",
         "extension": ".py",
-        "size_bytes": 5376,
-        "modified": "2026-11-08T06:25:44+00:00",
+        "size_bytes": 5658,
+        "modified": "2026-11-08T06:46:34+00:00",
         "connections": 0
       }
     ],
@@ -436,6 +429,18 @@
         "tests/test_memory_manager.py"
       ],
       "removed": []
+    },
+    {
+      "id": 3,
+      "scanned_at": "2026-11-08T12:16:44+05:30",
+      "added": [],
+      "changed": [
+        ".agents/memory/memory_manager.py",
+        ".agents/memory/project_visualizer.py",
+        "README.md",
+        "tests/test_memory_manager.py"
+      ],
+      "removed": []
     }
   ],
   "agents": [
@@ -471,9 +476,10 @@
       "name": "Agent Memory",
       "path": "D:\\SLIIT\\projectr\\Antigravity_memeory",
       "description": "Relationship-aware, local-first memory for any AI coding agent. It maps files as connected nodes, tracks dated changes, and carries project context across models without storing source or transcript text.",
-      "last_scanned": "2026-11-08T11:56:00+05:30",
+      "last_scanned": "2026-11-08T12:17:50+05:30",
       "file_count": 14,
-      "edge_count": 4
+      "edge_count": 4,
+      "is_current": true
     }
   ],
   "decisions": [
