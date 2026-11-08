@@ -1,23 +1,31 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "project": {
     "name": "Antigravity_memeory",
-    "description": "Portable project memory for AI coding agents. It indexes repository structure, preserves decisions and tasks, and generates compact context so agents avoid repeated full-project exploration.",
+    "display_name": "Agent Memory",
+    "description": "Relationship-aware, local-first memory for any AI coding agent. It maps files as connected nodes, tracks dated changes, and carries project context across models without storing source or transcript text.",
     "root": ".",
     "created_at": "2026-10-05",
-    "last_scanned": "2026-11-08T11:39:53+05:30",
+    "last_scanned": "2026-11-08T11:56:00+05:30",
     "tech_stack": [
       "Python"
     ]
   },
   "summary": {
-    "file_count": 13,
-    "total_bytes": 46352,
+    "file_count": 14,
+    "total_bytes": 85164,
     "scan_truncated": false,
+    "edge_count": 4,
+    "connected_files": 5,
     "changes": {
       "added": [],
       "changed": [
-        ".agents/memory/project_visualizer.py"
+        ".agents/memory/memory_manager.py",
+        ".agents/memory/project_visualizer.py",
+        ".agents/memory/relation_graph.py",
+        ".agents/memory/server.py",
+        "README.md",
+        "tests/test_memory_manager.py"
       ],
       "removed": []
     }
@@ -27,12 +35,13 @@
     "modules": [
       {
         "name": ".agents",
-        "file_count": 7,
+        "file_count": 8,
         "sample_files": [
           ".agents/hooks.json",
           ".agents/memory/memory_hook.py",
           ".agents/memory/memory_manager.py",
           ".agents/memory/project_visualizer.py",
+          ".agents/memory/relation_graph.py",
           ".agents/memory/server.py",
           ".agents/rules/memory.md",
           ".agents/skills/project-memory/SKILL.md"
@@ -65,81 +74,406 @@
   "files": [
     {
       "path": ".gitignore",
+      "name": ".gitignore",
+      "extension": "",
+      "language": "File",
+      "module": "root",
       "size_bytes": 200,
       "modified": "2026-11-07T10:25:56+00:00",
-      "signature": "6f4800d4f2e3"
+      "signature": "b83d5384b8f8e7ae"
     },
     {
       "path": "AGENTS.md",
-      "size_bytes": 499,
-      "modified": "2026-11-07T10:13:17+00:00",
-      "signature": "130513a68e4f"
+      "name": "AGENTS.md",
+      "extension": ".md",
+      "language": "Markdown",
+      "module": "root",
+      "size_bytes": 639,
+      "modified": "2026-11-08T06:22:21+00:00",
+      "signature": "9a6a1bca3980ae78"
     },
     {
       "path": "GEMINI.md",
-      "size_bytes": 528,
-      "modified": "2026-11-07T10:14:12+00:00",
-      "signature": "5852ef3ef1df"
+      "name": "GEMINI.md",
+      "extension": ".md",
+      "language": "Markdown",
+      "module": "root",
+      "size_bytes": 591,
+      "modified": "2026-11-08T06:22:21+00:00",
+      "signature": "d4ea7857df0c6ae5"
     },
     {
       "path": "README.md",
-      "size_bytes": 2963,
-      "modified": "2026-11-07T10:16:21+00:00",
-      "signature": "aac1a549892e"
+      "name": "README.md",
+      "extension": ".md",
+      "language": "Markdown",
+      "module": "root",
+      "size_bytes": 5453,
+      "modified": "2026-11-08T06:25:26+00:00",
+      "signature": "0c5f16ddf4709882"
     },
     {
       "path": "install_project_memory.py",
-      "size_bytes": 2372,
-      "modified": "2026-11-07T10:16:21+00:00",
-      "signature": "c7d7e318451a"
+      "name": "install_project_memory.py",
+      "extension": ".py",
+      "language": "Python",
+      "module": "root",
+      "size_bytes": 2440,
+      "modified": "2026-11-08T06:21:56+00:00",
+      "signature": "4ef108a2f7472210"
     },
     {
       "path": ".agents/hooks.json",
+      "name": "hooks.json",
+      "extension": ".json",
+      "language": "JSON",
+      "module": ".agents",
       "size_bytes": 498,
       "modified": "2026-10-05T08:18:25+00:00",
-      "signature": "ac16b62b0683"
+      "signature": "f0abee41abe25ebf"
     },
     {
       "path": ".agents/memory/memory_hook.py",
-      "size_bytes": 1017,
-      "modified": "2026-11-07T10:15:30+00:00",
-      "signature": "285494ac48af"
+      "name": "memory_hook.py",
+      "extension": ".py",
+      "language": "Python",
+      "module": ".agents",
+      "size_bytes": 1025,
+      "modified": "2026-11-08T06:22:22+00:00",
+      "signature": "e117f294ec37a483"
     },
     {
       "path": ".agents/memory/memory_manager.py",
-      "size_bytes": 14847,
-      "modified": "2026-11-07T10:14:31+00:00",
-      "signature": "8ae78a7cc935"
+      "name": "memory_manager.py",
+      "extension": ".py",
+      "language": "Python",
+      "module": ".agents",
+      "size_bytes": 23228,
+      "modified": "2026-11-08T06:25:25+00:00",
+      "signature": "91e85b8797ee4c5c"
     },
     {
       "path": ".agents/memory/project_visualizer.py",
-      "size_bytes": 17700,
-      "modified": "2026-11-08T06:09:34+00:00",
-      "signature": "b2f51467d7d0"
+      "name": "project_visualizer.py",
+      "extension": ".py",
+      "language": "Python",
+      "module": ".agents",
+      "size_bytes": 31435,
+      "modified": "2026-11-08T06:24:29+00:00",
+      "signature": "14160384bde01c24"
+    },
+    {
+      "path": ".agents/memory/relation_graph.py",
+      "name": "relation_graph.py",
+      "extension": ".py",
+      "language": "Python",
+      "module": ".agents",
+      "size_bytes": 10663,
+      "modified": "2026-11-08T06:24:57+00:00",
+      "signature": "70a42ae56fc7f3f7"
     },
     {
       "path": ".agents/memory/server.py",
-      "size_bytes": 1049,
-      "modified": "2026-11-07T10:11:43+00:00",
-      "signature": "1a6c4e603063"
+      "name": "server.py",
+      "extension": ".py",
+      "language": "Python",
+      "module": ".agents",
+      "size_bytes": 1047,
+      "modified": "2026-11-08T06:24:40+00:00",
+      "signature": "b0a512a7121fca02"
     },
     {
       "path": ".agents/rules/memory.md",
-      "size_bytes": 667,
-      "modified": "2026-11-07T10:13:17+00:00",
-      "signature": "22e06245eb62"
+      "name": "memory.md",
+      "extension": ".md",
+      "language": "Markdown",
+      "module": ".agents",
+      "size_bytes": 881,
+      "modified": "2026-11-08T06:22:22+00:00",
+      "signature": "e990f6c3bff8dca3"
     },
     {
       "path": ".agents/skills/project-memory/SKILL.md",
-      "size_bytes": 1450,
-      "modified": "2026-11-07T10:13:16+00:00",
-      "signature": "fb6637f305e9"
+      "name": "SKILL.md",
+      "extension": ".md",
+      "language": "Markdown",
+      "module": ".agents",
+      "size_bytes": 1688,
+      "modified": "2026-11-08T06:21:58+00:00",
+      "signature": "4c159b3af35e86f0"
     },
     {
       "path": "tests/test_memory_manager.py",
-      "size_bytes": 2562,
-      "modified": "2026-11-07T10:14:13+00:00",
-      "signature": "f95697825f9f"
+      "name": "test_memory_manager.py",
+      "extension": ".py",
+      "language": "Python",
+      "module": "tests",
+      "size_bytes": 5376,
+      "modified": "2026-11-08T06:25:44+00:00",
+      "signature": "2bb41b936ec3685c"
+    }
+  ],
+  "graph": {
+    "nodes": [
+      {
+        "id": ".gitignore",
+        "label": ".gitignore",
+        "path": ".gitignore",
+        "module": "root",
+        "language": "File",
+        "extension": "",
+        "size_bytes": 200,
+        "modified": "2026-11-07T10:25:56+00:00",
+        "connections": 0
+      },
+      {
+        "id": "AGENTS.md",
+        "label": "AGENTS.md",
+        "path": "AGENTS.md",
+        "module": "root",
+        "language": "Markdown",
+        "extension": ".md",
+        "size_bytes": 639,
+        "modified": "2026-11-08T06:22:21+00:00",
+        "connections": 0
+      },
+      {
+        "id": "GEMINI.md",
+        "label": "GEMINI.md",
+        "path": "GEMINI.md",
+        "module": "root",
+        "language": "Markdown",
+        "extension": ".md",
+        "size_bytes": 591,
+        "modified": "2026-11-08T06:22:21+00:00",
+        "connections": 0
+      },
+      {
+        "id": "README.md",
+        "label": "README.md",
+        "path": "README.md",
+        "module": "root",
+        "language": "Markdown",
+        "extension": ".md",
+        "size_bytes": 5453,
+        "modified": "2026-11-08T06:25:26+00:00",
+        "connections": 0
+      },
+      {
+        "id": "install_project_memory.py",
+        "label": "install_project_memory.py",
+        "path": "install_project_memory.py",
+        "module": "root",
+        "language": "Python",
+        "extension": ".py",
+        "size_bytes": 2440,
+        "modified": "2026-11-08T06:21:56+00:00",
+        "connections": 0
+      },
+      {
+        "id": ".agents/hooks.json",
+        "label": "hooks.json",
+        "path": ".agents/hooks.json",
+        "module": ".agents",
+        "language": "JSON",
+        "extension": ".json",
+        "size_bytes": 498,
+        "modified": "2026-10-05T08:18:25+00:00",
+        "connections": 0
+      },
+      {
+        "id": ".agents/memory/memory_hook.py",
+        "label": "memory_hook.py",
+        "path": ".agents/memory/memory_hook.py",
+        "module": ".agents",
+        "language": "Python",
+        "extension": ".py",
+        "size_bytes": 1025,
+        "modified": "2026-11-08T06:22:22+00:00",
+        "connections": 1
+      },
+      {
+        "id": ".agents/memory/memory_manager.py",
+        "label": "memory_manager.py",
+        "path": ".agents/memory/memory_manager.py",
+        "module": ".agents",
+        "language": "Python",
+        "extension": ".py",
+        "size_bytes": 23228,
+        "modified": "2026-11-08T06:25:25+00:00",
+        "connections": 4
+      },
+      {
+        "id": ".agents/memory/project_visualizer.py",
+        "label": "project_visualizer.py",
+        "path": ".agents/memory/project_visualizer.py",
+        "module": ".agents",
+        "language": "Python",
+        "extension": ".py",
+        "size_bytes": 31435,
+        "modified": "2026-11-08T06:24:29+00:00",
+        "connections": 1
+      },
+      {
+        "id": ".agents/memory/relation_graph.py",
+        "label": "relation_graph.py",
+        "path": ".agents/memory/relation_graph.py",
+        "module": ".agents",
+        "language": "Python",
+        "extension": ".py",
+        "size_bytes": 10663,
+        "modified": "2026-11-08T06:24:57+00:00",
+        "connections": 1
+      },
+      {
+        "id": ".agents/memory/server.py",
+        "label": "server.py",
+        "path": ".agents/memory/server.py",
+        "module": ".agents",
+        "language": "Python",
+        "extension": ".py",
+        "size_bytes": 1047,
+        "modified": "2026-11-08T06:24:40+00:00",
+        "connections": 1
+      },
+      {
+        "id": ".agents/rules/memory.md",
+        "label": "memory.md",
+        "path": ".agents/rules/memory.md",
+        "module": ".agents",
+        "language": "Markdown",
+        "extension": ".md",
+        "size_bytes": 881,
+        "modified": "2026-11-08T06:22:22+00:00",
+        "connections": 0
+      },
+      {
+        "id": ".agents/skills/project-memory/SKILL.md",
+        "label": "SKILL.md",
+        "path": ".agents/skills/project-memory/SKILL.md",
+        "module": ".agents",
+        "language": "Markdown",
+        "extension": ".md",
+        "size_bytes": 1688,
+        "modified": "2026-11-08T06:21:58+00:00",
+        "connections": 0
+      },
+      {
+        "id": "tests/test_memory_manager.py",
+        "label": "test_memory_manager.py",
+        "path": "tests/test_memory_manager.py",
+        "module": "tests",
+        "language": "Python",
+        "extension": ".py",
+        "size_bytes": 5376,
+        "modified": "2026-11-08T06:25:44+00:00",
+        "connections": 0
+      }
+    ],
+    "edges": [
+      {
+        "source": ".agents/memory/memory_hook.py",
+        "target": ".agents/memory/memory_manager.py",
+        "kind": "import"
+      },
+      {
+        "source": ".agents/memory/memory_manager.py",
+        "target": ".agents/memory/project_visualizer.py",
+        "kind": "import"
+      },
+      {
+        "source": ".agents/memory/memory_manager.py",
+        "target": ".agents/memory/relation_graph.py",
+        "kind": "import"
+      },
+      {
+        "source": ".agents/memory/memory_manager.py",
+        "target": ".agents/memory/server.py",
+        "kind": "import"
+      }
+    ],
+    "summary": {
+      "node_count": 14,
+      "edge_count": 4,
+      "connected_files": 5,
+      "isolated_files": 9
+    }
+  },
+  "history": [
+    {
+      "id": 1,
+      "scanned_at": "2026-11-08T11:52:36+05:30",
+      "added": [
+        ".agents/memory/relation_graph.py"
+      ],
+      "changed": [
+        ".agents/hooks.json",
+        ".agents/memory/memory_hook.py",
+        ".agents/memory/memory_manager.py",
+        ".agents/memory/project_visualizer.py",
+        ".agents/memory/server.py",
+        ".agents/rules/memory.md",
+        ".agents/skills/project-memory/SKILL.md",
+        ".gitignore",
+        "AGENTS.md",
+        "GEMINI.md",
+        "README.md",
+        "install_project_memory.py",
+        "tests/test_memory_manager.py"
+      ],
+      "removed": []
+    },
+    {
+      "id": 2,
+      "scanned_at": "2026-11-08T11:56:00+05:30",
+      "added": [],
+      "changed": [
+        ".agents/memory/memory_manager.py",
+        ".agents/memory/project_visualizer.py",
+        ".agents/memory/relation_graph.py",
+        ".agents/memory/server.py",
+        "README.md",
+        "tests/test_memory_manager.py"
+      ],
+      "removed": []
+    }
+  ],
+  "agents": [
+    {
+      "id": "antigravity",
+      "key": "antigravity",
+      "name": "Antigravity",
+      "instruction_file": "GEMINI.md",
+      "status": "detected",
+      "added_at": "2026-11-08T11:52:36+05:30"
+    },
+    {
+      "id": "codex",
+      "key": "codex",
+      "name": "Codex",
+      "instruction_file": "AGENTS.md",
+      "status": "detected",
+      "added_at": "2026-11-08T11:52:36+05:30"
+    },
+    {
+      "id": "gemini",
+      "key": "gemini",
+      "name": "Gemini",
+      "instruction_file": "GEMINI.md",
+      "status": "detected",
+      "added_at": "2026-11-08T11:52:36+05:30"
+    }
+  ],
+  "chats": [],
+  "projects": [
+    {
+      "id": "antigravity-memeory",
+      "name": "Agent Memory",
+      "path": "D:\\SLIIT\\projectr\\Antigravity_memeory",
+      "description": "Relationship-aware, local-first memory for any AI coding agent. It maps files as connected nodes, tracks dated changes, and carries project context across models without storing source or transcript text.",
+      "last_scanned": "2026-11-08T11:56:00+05:30",
+      "file_count": 14,
+      "edge_count": 4
     }
   ],
   "decisions": [
@@ -154,6 +488,18 @@
       "title": "Use project-local, agent-neutral memory",
       "rationale": "Portable metadata and explicit durable notes work across Codex, Antigravity, Gemini, and other agents without collecting private chat history.",
       "created_at": "2026-11-07T15:45:41+05:30"
+    },
+    {
+      "id": 3,
+      "title": "Use a resolved file relationship graph",
+      "rationale": "Agents can query relevant neighboring files without loading the full repository or relying on opaque embeddings.",
+      "created_at": "2026-11-08T11:55:59+05:30"
+    },
+    {
+      "id": 4,
+      "title": "Keep chat tracking explicit and summary-only",
+      "rationale": "The product tracks useful conversation context without silently collecting or embedding private transcript text.",
+      "created_at": "2026-11-08T11:56:00+05:30"
     }
   ],
   "tasks": [

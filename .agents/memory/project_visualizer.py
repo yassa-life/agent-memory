@@ -9,14 +9,15 @@ from typing import Any
 
 def render_dashboard(data: dict[str, Any]) -> str:
     payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
-    name = html.escape(data.get("project", {}).get("name", "Project Memory"))
+    project = data.get("project", {})
+    name = html.escape(project.get("display_name") or project.get("name", "Agent Memory"))
     return f'''<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>{name} / Project Memory</title>
+<title>{name} / Agent Memory</title>
 <style>
 :root {{
   --paper: #f2f5f6;
@@ -98,12 +99,12 @@ a {{ color: inherit; }}
 .snapshot-time {{ color: var(--muted); font-size: 13px; max-width: 28ch; }}
 .metrics {{
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   border-bottom: 1px solid var(--ink);
 }}
-.metric {{ padding: 24px 24px 22px 0; min-height: 130px; }}
+.metric {{ padding: 22px 16px 20px 0; min-height: 122px; }}
 .metric + .metric {{ border-left: 1px solid var(--rule); padding-left: 24px; }}
-.metric-value {{ font-size: clamp(34px, 4vw, 56px); font-weight: 650; line-height: 1; letter-spacing: -.045em; }}
+.metric-value {{ font-size: clamp(30px, 3.2vw, 48px); font-weight: 650; line-height: 1; letter-spacing: -.045em; }}
 .metric-label {{ margin-top: 10px; color: var(--muted); font-size: 13px; }}
 .workspace {{ display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 64px; padding-top: 48px; }}
 .index {{ align-self: start; position: sticky; top: 28px; }}
@@ -136,6 +137,24 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
 }}
 .search input:focus {{ border-bottom-width: 3px; padding-bottom: 6px; }}
 .search span {{ position: absolute; right: 0; bottom: 8px; color: var(--muted); pointer-events: none; }}
+.graph-shell {{ background: var(--ink); color: white; border-top: 6px solid var(--cobalt); }}
+.graph-toolbar {{ display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 18px 20px; border-bottom: 1px solid #34414b; }}
+.graph-toolbar .search input {{ color: white; border-color: #74818a; }}
+.graph-toolbar .search input::placeholder {{ color: #9da8af; }}
+.graph-legend {{ color: #aab4ba; font-size: 12px; }}
+.graph-stage {{ width: 100%; min-height: 520px; display: block; overflow: hidden; }}
+.graph-stage svg {{ display: block; width: 100%; height: 520px; }}
+.graph-edge {{ stroke: #53616b; stroke-width: 1; opacity: .62; vector-effect: non-scaling-stroke; }}
+.graph-node circle {{ fill: #f2f5f6; stroke: var(--ink); stroke-width: 1.5; cursor: pointer; vector-effect: non-scaling-stroke; }}
+.graph-node.is-connected circle {{ fill: #8fa9ff; }}
+.graph-node.is-hub circle {{ fill: var(--signal); }}
+.graph-node text {{ fill: #dbe3e7; font: 11px "Aptos", "Segoe UI", sans-serif; pointer-events: none; }}
+.graph-group-label {{ fill: #778690; font: 700 12px "Aptos", "Segoe UI", sans-serif; text-anchor: middle; }}
+.graph-node:focus circle, .graph-node:hover circle {{ stroke: white; stroke-width: 3; }}
+.graph-detail {{ min-height: 78px; padding: 16px 20px; border-top: 1px solid #34414b; color: #c7d0d5; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px; align-items: center; }}
+.graph-detail strong {{ color: white; display: block; overflow-wrap: anywhere; }}
+.graph-detail-meta {{ color: #9da8af; font-size: 12px; margin-top: 4px; }}
+.graph-action {{ color: white; border: 1px solid #69767f; padding: 7px 10px; font-size: 12px; white-space: nowrap; }}
 .module-list {{ border-top: 1px solid var(--ink); }}
 .module-row {{
   display: grid;
@@ -176,6 +195,22 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
 .change + .change {{ border-left: 1px solid var(--rule); }}
 .change strong {{ display: block; font-size: 24px; }}
 .change span {{ color: var(--muted); font-size: 12px; }}
+.catalog-grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--rule); background: var(--rule); gap: 1px; }}
+.catalog-column {{ background: var(--surface); padding: 22px; min-height: 220px; }}
+.catalog-column h3 {{ margin: 0 0 18px; font-size: 16px; }}
+.catalog-list {{ list-style: none; margin: 0; padding: 0; }}
+.catalog-item {{ padding: 12px 0; border-top: 1px solid var(--soft-rule); }}
+.catalog-item:first-child {{ border-top: 0; padding-top: 0; }}
+.catalog-title {{ font-weight: 650; overflow-wrap: anywhere; }}
+.catalog-meta {{ color: var(--muted); font-size: 12px; margin-top: 3px; overflow-wrap: anywhere; }}
+.history-filter {{ display: flex; align-items: center; gap: 10px; }}
+.history-filter input {{ border: 1px solid var(--rule); background: var(--surface); color: var(--ink); padding: 7px 9px; }}
+.history-list {{ border-top: 1px solid var(--ink); }}
+.history-event {{ display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 28px; padding: 22px 0; border-bottom: 1px solid var(--rule); }}
+.history-date {{ font-weight: 650; }}
+.history-counts {{ display: flex; gap: 16px; color: var(--muted); font-size: 13px; margin-bottom: 10px; }}
+.history-files {{ display: flex; flex-wrap: wrap; gap: 6px; }}
+.history-file {{ padding: 3px 7px; background: var(--surface); border: 1px solid var(--soft-rule); font-family: "Cascadia Code", Consolas, monospace; font-size: 11px; }}
 .footer {{ display: flex; justify-content: space-between; gap: 24px; padding-top: 32px; color: var(--muted); font-size: 12px; }}
 .footer strong {{ color: var(--ink); }}
 [hidden] {{ display: none !important; }}
@@ -183,9 +218,9 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
   .shell {{ padding-inline: 20px; }}
   .masthead {{ grid-template-columns: 88px minmax(0, 1fr); min-height: auto; }}
   .snapshot {{ grid-column: 2; gap: 8px; }}
-  .metrics {{ grid-template-columns: repeat(2, 1fr); }}
-  .metric:nth-child(3) {{ border-left: 0; }}
-  .metric:nth-child(n+3) {{ border-top: 1px solid var(--rule); }}
+  .metrics {{ grid-template-columns: repeat(3, 1fr); }}
+  .metric:nth-child(4) {{ border-left: 0; }}
+  .metric:nth-child(n+4) {{ border-top: 1px solid var(--rule); }}
   .workspace {{ grid-template-columns: 1fr; gap: 30px; }}
   .index {{ position: static; display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }}
 }}
@@ -195,6 +230,8 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
   .project-name {{ font-size: 48px; }}
   .snapshot {{ margin-top: 30px; gap: 8px; }}
   .metrics {{ grid-template-columns: 1fr 1fr; }}
+  .metric:nth-child(odd) {{ border-left: 0; }}
+  .metric:nth-child(n+3) {{ border-top: 1px solid var(--rule); }}
   .metric {{ min-height: 112px; padding: 18px 12px 18px 0; }}
   .metric + .metric {{ padding-left: 14px; }}
   .index {{ display: block; }}
@@ -203,12 +240,17 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
   .module-row {{ grid-template-columns: 1fr 58px; gap: 12px; padding: 12px 0; }}
   .bar-track {{ grid-column: 1 / -1; grid-row: 2; }}
   .task-list, .note-list {{ grid-template-columns: 1fr; }}
+  .catalog-grid {{ grid-template-columns: 1fr; }}
   .task:nth-child(even) {{ border-left: 0; padding-left: 0; }}
   .decision {{ grid-template-columns: 40px 1fr; gap: 14px; }}
   .decision-rationale {{ grid-column: 2; }}
   .changes {{ grid-template-columns: 1fr; }}
   .change + .change {{ border-left: 0; border-top: 1px solid var(--rule); }}
   .footer {{ display: block; }}
+  .graph-toolbar, .graph-detail {{ display: block; }}
+  .graph-toolbar .search {{ margin-top: 12px; }}
+  .graph-action {{ display: inline-block; margin-top: 12px; }}
+  .history-event {{ grid-template-columns: 1fr; gap: 8px; }}
 }}
 @media (prefers-reduced-motion: reduce) {{ html {{ scroll-behavior: auto; }} }}
 </style>
@@ -217,7 +259,7 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
 <div class="topline"></div>
 <div class="shell">
   <header class="masthead">
-    <div class="mark" aria-label="Project Memory">PM</div>
+    <div class="mark" aria-label="Agent Memory">AM</div>
     <div>
       <h1 class="project-name" id="projectName"></h1>
       <p class="project-description" id="projectDescription"></p>
@@ -230,9 +272,11 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
 
   <section class="metrics" aria-label="Project summary">
     <div class="metric"><div class="metric-value" id="fileCount">0</div><div class="metric-label">Files indexed</div></div>
-    <div class="metric"><div class="metric-value" id="storage">0 KB</div><div class="metric-label">Indexed footprint</div></div>
-    <div class="metric"><div class="metric-value" id="taskCount">0</div><div class="metric-label">Active tasks</div></div>
-    <div class="metric"><div class="metric-value" id="decisionCount">0</div><div class="metric-label">Recorded decisions</div></div>
+    <div class="metric"><div class="metric-value" id="linkCount">0</div><div class="metric-label">Resolved links</div></div>
+    <div class="metric"><div class="metric-value" id="connectedCount">0</div><div class="metric-label">Connected files</div></div>
+    <div class="metric"><div class="metric-value" id="agentCount">0</div><div class="metric-label">AI agents</div></div>
+    <div class="metric"><div class="metric-value" id="chatCount">0</div><div class="metric-label">Tracked chats</div></div>
+    <div class="metric"><div class="metric-value" id="projectCount">0</div><div class="metric-label">Tracked projects</div></div>
   </section>
 
   <div class="workspace">
@@ -248,7 +292,10 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
       <nav class="index-block" aria-label="Dashboard sections">
         <h2 class="section-title">Index</h2>
         <ul class="jump-list">
+          <li><a href="#graph">File graph</a></li>
           <li><a href="#repository">Repository map</a></li>
+          <li><a href="#catalog">Agents and projects</a></li>
+          <li><a href="#history">Edit history</a></li>
           <li><a href="#work">Active work</a></li>
           <li><a href="#decisions">Decisions</a></li>
           <li><a href="#notes">Notes</a></li>
@@ -257,6 +304,18 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
     </aside>
 
     <main class="main-column">
+      <section class="section" id="graph">
+        <div class="section-head"><div><h2>File relationship graph</h2><div class="section-meta" id="graphMeta"></div></div></div>
+        <div class="graph-shell">
+          <div class="graph-toolbar">
+            <div class="graph-legend">Each node is a file. Lines are resolved imports, includes, assets, or links.</div>
+            <label class="search"><span aria-hidden="true">⌕</span><input id="graphSearch" type="search" placeholder="Find a file node" aria-label="Find a file node"></label>
+          </div>
+          <div class="graph-stage" id="graphStage" aria-label="Interactive file relationship graph"></div>
+          <div class="graph-detail" id="graphDetail"><div><strong>Select a file node</strong><div class="graph-detail-meta">Choose a node to inspect its path, type, and connections.</div></div></div>
+        </div>
+      </section>
+
       <section class="section" id="repository">
         <div class="section-head">
           <div><h2>Repository map</h2><div class="section-meta" id="moduleMeta"></div></div>
@@ -264,6 +323,24 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
         </div>
         <div class="module-list" id="modules"></div>
         <div class="empty" id="moduleEmpty" hidden>No modules match that filter.</div>
+      </section>
+
+      <section class="section" id="catalog">
+        <div class="section-head"><h2>Memory catalogue</h2><div class="section-meta">Explicitly tracked, never silently scraped</div></div>
+        <div class="catalog-grid">
+          <div class="catalog-column"><h3>AI agents</h3><ul class="catalog-list" id="agentList"></ul></div>
+          <div class="catalog-column"><h3>Projects</h3><ul class="catalog-list" id="projectList"></ul></div>
+          <div class="catalog-column"><h3>Chats</h3><ul class="catalog-list" id="chatList"></ul></div>
+        </div>
+      </section>
+
+      <section class="section" id="history">
+        <div class="section-head">
+          <div><h2>Edit history</h2><div class="section-meta" id="historyMeta"></div></div>
+          <label class="history-filter">Date <input id="historyDate" type="date" aria-label="Filter edit history by date"></label>
+        </div>
+        <div class="history-list" id="historyList"></div>
+        <div class="empty" id="historyEmpty" hidden>No scans match that date.</div>
       </section>
 
       <section class="section" id="work">
@@ -295,7 +372,7 @@ code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; over
     </main>
   </div>
 
-  <footer class="footer"><span><strong>Project Memory</strong> / local-first repository context</span><span>No source code or chat history is displayed.</span></footer>
+  <footer class="footer"><span><strong>Agent Memory</strong> / local-first relationship context for any AI agent</span><span>File contents and transcript text are never embedded in this dashboard.</span></footer>
 </div>
 <script>
 const memory = {payload};
@@ -316,22 +393,90 @@ const formatDate = value => {{
 const project = memory.project || {{}};
 const summary = memory.summary || {{}};
 const architecture = memory.architecture || {{}};
+const graph = memory.graph || {{nodes:[], edges:[], summary:{{}}}};
 const activeTasks = (memory.tasks || []).filter(task => !['done','completed','cancelled'].includes(String(task.status || 'pending').toLowerCase()));
 const modules = architecture.modules || [];
 const maxFiles = Math.max(1, ...modules.map(module => Number(module.file_count || 0)));
 
-byId('projectName').textContent = project.name || 'Untitled project';
+byId('projectName').textContent = project.display_name || project.name || 'Untitled project';
 byId('projectDescription').textContent = project.description || architecture.overview || 'Project structure, decisions, and active work in one durable index.';
 byId('updated').textContent = formatDate(project.last_scanned);
 byId('fileCount').textContent = Number(summary.file_count || 0).toLocaleString();
-byId('storage').textContent = formatBytes(summary.total_bytes);
-byId('taskCount').textContent = activeTasks.length.toLocaleString();
-byId('decisionCount').textContent = (memory.decisions || []).length.toLocaleString();
+byId('linkCount').textContent = Number(graph.summary?.edge_count || 0).toLocaleString();
+byId('connectedCount').textContent = Number(graph.summary?.connected_files || 0).toLocaleString();
+byId('agentCount').textContent = (memory.agents || []).length.toLocaleString();
+byId('chatCount').textContent = (memory.chats || []).length.toLocaleString();
+byId('projectCount').textContent = (memory.projects || []).length.toLocaleString();
 
 const stack = project.tech_stack || [];
 byId('stack').innerHTML = stack.length ? stack.map(item => `<span class="stack-item">${{escapeHtml(item)}}</span>`).join('') : '<span class="section-meta">Not detected</span>';
 const entrypoints = memory.entrypoints || [];
 byId('entrypoints').innerHTML = entrypoints.length ? entrypoints.map(path => `<li><code>${{escapeHtml(path)}}</code></li>`).join('') : '<li class="section-meta">No entrypoints detected</li>';
+
+function renderGraph() {{
+  const allNodes = graph.nodes || [];
+  const ranked = allNodes.slice().sort((a, b) => Number(b.connections || 0) - Number(a.connections || 0) || String(a.path).localeCompare(String(b.path)));
+  const visibleNodes = ranked.slice(0, 250);
+  const visibleIds = new Set(visibleNodes.map(node => node.id));
+  const visibleEdges = (graph.edges || []).filter(edge => visibleIds.has(edge.source) && visibleIds.has(edge.target));
+  const groups = new Map();
+  visibleNodes.forEach(node => {{
+    const key = node.module || 'root';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(node);
+  }});
+  const groupEntries = [...groups.entries()];
+  const columns = Math.max(1, Math.ceil(Math.sqrt(groupEntries.length * 1.7)));
+  const rows = Math.max(1, Math.ceil(groupEntries.length / columns));
+  const positions = new Map();
+  groupEntries.forEach(([moduleName, nodes], groupIndex) => {{
+    const column = groupIndex % columns;
+    const row = Math.floor(groupIndex / columns);
+    const centerX = ((column + .5) / columns) * 1000;
+    const centerY = ((row + .5) / rows) * 500 + 20;
+    const radius = Math.min(118, 48 + nodes.length * 7);
+    nodes.forEach((node, index) => {{
+      const angle = nodes.length === 1 ? 0 : (Math.PI * 2 * index / nodes.length) - Math.PI / 2;
+      const ring = nodes.length === 1 ? 0 : radius * (.82 + .18 * (index % 2));
+      positions.set(node.id, {{x: centerX + Math.cos(angle) * ring, y: centerY + Math.sin(angle) * ring}});
+    }});
+  }});
+  const lines = visibleEdges.map(edge => {{
+    const source = positions.get(edge.source), target = positions.get(edge.target);
+    return source && target ? `<line class="graph-edge" data-source="${{escapeHtml(edge.source)}}" data-target="${{escapeHtml(edge.target)}}" x1="${{source.x.toFixed(1)}}" y1="${{source.y.toFixed(1)}}" x2="${{target.x.toFixed(1)}}" y2="${{target.y.toFixed(1)}}"><title>${{escapeHtml(edge.kind)}}: ${{escapeHtml(edge.source)}} → ${{escapeHtml(edge.target)}}</title></line>` : '';
+  }}).join('');
+  const groupLabels = groupEntries.map(([moduleName, nodes], groupIndex) => {{
+    const column = groupIndex % columns;
+    const row = Math.floor(groupIndex / columns);
+    const x = ((column + .5) / columns) * 1000;
+    const y = ((row + .5) / rows) * 500 - 105;
+    return `<text class="graph-group-label" x="${{x.toFixed(1)}}" y="${{Math.max(22, y).toFixed(1)}}">${{escapeHtml(moduleName)}}</text>`;
+  }}).join('');
+  const nodes = visibleNodes.map((node, index) => {{
+    const point = positions.get(node.id);
+    const connections = Number(node.connections || 0);
+    const radius = 4.5 + Math.min(7, Math.sqrt(connections) * 2.2);
+    const state = connections >= 4 ? 'is-hub' : connections > 0 ? 'is-connected' : '';
+    const label = (connections > 0 || visibleNodes.length < 10) ? `<text x="${{(point.x + radius + 4).toFixed(1)}}" y="${{(point.y + 4).toFixed(1)}}">${{escapeHtml(node.label)}}</text>` : '';
+    return `<g class="graph-node ${{state}}" tabindex="0" role="button" data-path="${{escapeHtml(node.path)}}" aria-label="${{escapeHtml(node.path)}}, ${{connections}} connections"><circle cx="${{point.x.toFixed(1)}}" cy="${{point.y.toFixed(1)}}" r="${{radius.toFixed(1)}}"><title>${{escapeHtml(node.path)}}</title></circle>${{label}}</g>`;
+  }}).join('');
+  byId('graphStage').innerHTML = `<svg viewBox="0 0 1000 540" role="img" aria-label="File relationship graph">${{groupLabels}}${{lines}}${{nodes}}</svg>`;
+  byId('graphMeta').textContent = `${{allNodes.length}} nodes / ${{(graph.edges || []).length}} links${{allNodes.length > 250 ? ' / showing 250 most connected' : ''}}`;
+}}
+
+function selectGraphNode(path) {{
+  const node = (graph.nodes || []).find(item => item.path === path);
+  if (!node) return;
+  byId('graphDetail').innerHTML = `<div><strong>${{escapeHtml(node.path)}}</strong><div class="graph-detail-meta">${{escapeHtml(node.language)}} / ${{Number(node.connections || 0)}} connections / ${{formatBytes(node.size_bytes)}}</div></div><code class="graph-action">related "${{escapeHtml(node.path)}}"</code>`;
+}}
+
+renderGraph();
+byId('graphStage').addEventListener('click', event => {{ const node = event.target.closest('.graph-node'); if (node) selectGraphNode(node.dataset.path); }});
+byId('graphStage').addEventListener('keydown', event => {{ const node = event.target.closest('.graph-node'); if (node && (event.key === 'Enter' || event.key === ' ')) {{ event.preventDefault(); selectGraphNode(node.dataset.path); }} }});
+byId('graphSearch').addEventListener('input', event => {{
+  const query = event.target.value.trim().toLowerCase();
+  byId('graphStage').querySelectorAll('.graph-node').forEach(node => {{ node.style.opacity = !query || node.dataset.path.toLowerCase().includes(query) ? '1' : '.12'; }});
+}});
 
 function renderModules(query = '') {{
   const normalized = query.trim().toLowerCase();
@@ -346,6 +491,28 @@ function renderModules(query = '') {{
 }}
 renderModules();
 byId('moduleSearch').addEventListener('input', event => renderModules(event.target.value));
+
+const agents = memory.agents || [];
+byId('agentList').innerHTML = agents.length ? agents.map(agent => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(agent.name)}}</div><div class="catalog-meta">${{escapeHtml(agent.status || 'detected')}} / ${{escapeHtml(agent.instruction_file || 'No instruction file')}}</div></li>`).join('') : '<li class="catalog-meta">No AI agents detected. Run <code>enable-agent</code> to add one.</li>';
+const projects = memory.projects || [];
+byId('projectList').innerHTML = projects.length ? projects.map(item => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(item.name)}}</div><div class="catalog-meta">${{Number(item.file_count || 0)}} files / ${{Number(item.edge_count || 0)}} links<br>${{escapeHtml(item.path)}}</div></li>`).join('') : '<li class="catalog-meta">No projects tracked yet.</li>';
+const chats = memory.chats || [];
+byId('chatList').innerHTML = chats.length ? chats.slice().reverse().map(chat => `<li class="catalog-item"><div class="catalog-title">${{escapeHtml(chat.title)}}</div><div class="catalog-meta">${{escapeHtml(chat.agent)}} / ${{escapeHtml(chat.summary)}}</div></li>`).join('') : '<li class="catalog-meta">No chat metadata imported. Transcripts are never collected automatically.</li>';
+
+const history = memory.history || [];
+function renderHistory(date = '') {{
+  const visible = history.slice().reverse().filter(event => !date || String(event.scanned_at || '').startsWith(date));
+  byId('historyList').innerHTML = visible.map(event => {{
+    const files = [...(event.added || []).map(path => ['+', path]), ...(event.changed || []).map(path => ['~', path]), ...(event.removed || []).map(path => ['−', path])];
+    const fileMarkup = files.slice(0, 18).map(([prefix, path]) => `<span class="history-file">${{prefix}} ${{escapeHtml(path)}}</span>`).join('');
+    const overflow = files.length > 18 ? `<span class="history-file">+${{files.length - 18}} more</span>` : '';
+    return `<article class="history-event"><div class="history-date">${{escapeHtml(formatDate(event.scanned_at).replace('Last scanned ', ''))}}</div><div><div class="history-counts"><span>${{(event.added || []).length}} added</span><span>${{(event.changed || []).length}} changed</span><span>${{(event.removed || []).length}} removed</span></div><div class="history-files">${{fileMarkup}}${{overflow}}</div></div></article>`;
+  }}).join('');
+  byId('historyMeta').textContent = `${{visible.length}} of ${{history.length}} scans`;
+  byId('historyEmpty').hidden = visible.length !== 0;
+}}
+renderHistory();
+byId('historyDate').addEventListener('input', event => renderHistory(event.target.value));
 
 byId('taskMeta').textContent = `${{activeTasks.length}} open`;
 byId('tasks').innerHTML = activeTasks.map(task => `<article class="task"><div class="task-state">${{escapeHtml(task.status || 'pending')}}</div><div class="task-title">${{escapeHtml(task.title)}}</div><div class="task-category">${{escapeHtml(task.category || 'General')}}</div></article>`).join('');
