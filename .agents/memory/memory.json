@@ -5,20 +5,19 @@
     "description": "Portable project memory for AI coding agents. It indexes repository structure, preserves decisions and tasks, and generates compact context so agents avoid repeated full-project exploration.",
     "root": ".",
     "created_at": "2026-10-05",
-    "last_scanned": "2026-11-07T15:46:32+05:30",
+    "last_scanned": "2026-11-08T11:39:53+05:30",
     "tech_stack": [
       "Python"
     ]
   },
   "summary": {
-    "file_count": 15,
-    "total_bytes": 75975,
+    "file_count": 13,
+    "total_bytes": 46352,
     "scan_truncated": false,
     "changes": {
       "added": [],
       "changed": [
-        "README.md",
-        "install_project_memory.py"
+        ".agents/memory/project_visualizer.py"
       ],
       "removed": []
     }
@@ -28,16 +27,15 @@
     "modules": [
       {
         "name": ".agents",
-        "file_count": 9,
+        "file_count": 7,
         "sample_files": [
           ".agents/hooks.json",
-          ".agents/memory/global_memory_scanner.py",
           ".agents/memory/memory_hook.py",
           ".agents/memory/memory_manager.py",
           ".agents/memory/project_visualizer.py",
           ".agents/memory/server.py",
-          ".agents/memory/visualizer_3d.py",
-          ".agents/rules/memory.md"
+          ".agents/rules/memory.md",
+          ".agents/skills/project-memory/SKILL.md"
         ]
       },
       {
@@ -67,9 +65,9 @@
   "files": [
     {
       "path": ".gitignore",
-      "size_bytes": 57,
-      "modified": "2026-11-07T10:14:14+00:00",
-      "signature": "716b9683f5cf"
+      "size_bytes": 200,
+      "modified": "2026-11-07T10:25:56+00:00",
+      "signature": "6f4800d4f2e3"
     },
     {
       "path": "AGENTS.md",
@@ -102,12 +100,6 @@
       "signature": "ac16b62b0683"
     },
     {
-      "path": ".agents/memory/global_memory_scanner.py",
-      "size_bytes": 8539,
-      "modified": "2026-10-05T09:58:13+00:00",
-      "signature": "d54b997733aa"
-    },
-    {
       "path": ".agents/memory/memory_hook.py",
       "size_bytes": 1017,
       "modified": "2026-11-07T10:15:30+00:00",
@@ -121,21 +113,15 @@
     },
     {
       "path": ".agents/memory/project_visualizer.py",
-      "size_bytes": 4434,
-      "modified": "2026-11-07T10:11:42+00:00",
-      "signature": "4e61094e7cc8"
+      "size_bytes": 17700,
+      "modified": "2026-11-08T06:09:34+00:00",
+      "signature": "b2f51467d7d0"
     },
     {
       "path": ".agents/memory/server.py",
       "size_bytes": 1049,
       "modified": "2026-11-07T10:11:43+00:00",
       "signature": "1a6c4e603063"
-    },
-    {
-      "path": ".agents/memory/visualizer_3d.py",
-      "size_bytes": 34493,
-      "modified": "2026-10-05T10:00:14+00:00",
-      "signature": "e2857e01e30e"
     },
     {
       "path": ".agents/rules/memory.md",

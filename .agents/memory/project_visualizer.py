@@ -1,4 +1,4 @@
-"""Self-contained project-memory dashboard generator."""
+"""Generate the self-contained Project Memory dashboard."""
 
 from __future__ import annotations
 
@@ -11,14 +11,358 @@ def render_dashboard(data: dict[str, Any]) -> str:
     payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     name = html.escape(data.get("project", {}).get("name", "Project Memory"))
     return f'''<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{name} — Project Memory</title>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{name} / Project Memory</title>
 <style>
-:root{{--bg:#081018;--panel:#101c28;--line:#23364a;--text:#e6edf3;--muted:#8ca0b3;--accent:#62d5b2;--blue:#6cb6ff}}
-*{{box-sizing:border-box}}body{{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,Segoe UI,sans-serif}}main{{max-width:1180px;margin:auto;padding:32px 20px 60px}}header{{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:24px}}h1{{margin:0;font-size:clamp(28px,5vw,52px);letter-spacing:-.04em}}.eyebrow{{color:var(--accent);text-transform:uppercase;letter-spacing:.16em;font-size:12px;font-weight:700}}.muted{{color:var(--muted)}}.grid{{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}}.card{{grid-column:span 4;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}}.wide{{grid-column:span 8}}.full{{grid-column:1/-1}}.metric{{font-size:30px;font-weight:750;color:var(--blue)}}h2{{font-size:14px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 14px}}ul{{list-style:none;padding:0;margin:0}}li{{padding:8px 0;border-top:1px solid var(--line)}}li:first-child{{border:0}}code{{color:var(--accent)}}.pill{{display:inline-block;background:#172c34;border:1px solid #28504d;color:var(--accent);padding:4px 9px;border-radius:99px;margin:3px;font-size:12px}}.status{{font-size:11px;text-transform:uppercase;color:var(--blue)}}@media(max-width:780px){{.card,.wide{{grid-column:1/-1}}header{{display:block}}}}
-</style></head><body><main>
-<header><div><div class="eyebrow">Agent-ready project memory</div><h1 id="name"></h1><div class="muted" id="description"></div></div><div class="muted" id="updated"></div></header>
-<section class="grid"><article class="card"><h2>Files indexed</h2><div class="metric" id="files"></div></article><article class="card"><h2>Active tasks</h2><div class="metric" id="taskCount"></div></article><article class="card"><h2>Decisions</h2><div class="metric" id="decisionCount"></div></article><article class="card wide"><h2>Technology</h2><div id="stack"></div></article><article class="card"><h2>Start here</h2><ul id="entrypoints"></ul></article><article class="card wide"><h2>Repository map</h2><ul id="modules"></ul></article><article class="card"><h2>Tasks</h2><ul id="tasks"></ul></article><article class="card full"><h2>Architectural decisions</h2><ul id="decisions"></ul></article></section>
-</main><script>
-const d={payload};const q=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c]));q('name').textContent=d.project?.name||'Project';q('description').textContent=d.project?.description||'No description recorded yet.';q('updated').textContent='Updated '+(d.project?.last_scanned||'never');q('files').textContent=(d.summary?.file_count||0).toLocaleString();const active=(d.tasks||[]).filter(t=>!['done','completed','cancelled'].includes(t.status));q('taskCount').textContent=active.length;q('decisionCount').textContent=(d.decisions||[]).length;q('stack').innerHTML=(d.project?.tech_stack||[]).map(x=>`<span class="pill">${{esc(x)}}</span>`).join('')||'<span class="muted">Not detected</span>';q('entrypoints').innerHTML=(d.entrypoints||[]).map(x=>`<li><code>${{esc(x)}}</code></li>`).join('')||'<li class="muted">No entrypoints detected</li>';q('modules').innerHTML=(d.architecture?.modules||[]).map(x=>`<li><strong>${{esc(x.name)}}</strong> <span class="muted">${{x.file_count}} files</span></li>`).join('');q('tasks').innerHTML=active.map(x=>`<li><span class="status">${{esc(x.status||'pending')}}</span><br>${{esc(x.title)}}</li>`).join('')||'<li class="muted">No active tasks</li>';q('decisions').innerHTML=(d.decisions||[]).slice().reverse().map(x=>`<li><strong>${{esc(x.title)}}</strong><br><span class="muted">${{esc(x.rationale)}}</span></li>`).join('')||'<li class="muted">No decisions recorded</li>';
-</script></body></html>'''
+:root {{
+  --paper: #f2f5f6;
+  --surface: #ffffff;
+  --ink: #101820;
+  --muted: #65737d;
+  --rule: #ccd5da;
+  --soft-rule: #e5eaed;
+  --cobalt: #2556d8;
+  --cobalt-soft: #e8edfc;
+  --signal: #f06a3a;
+  --success: #176b55;
+  --content: 1420px;
+}}
+* {{ box-sizing: border-box; }}
+html {{ scroll-behavior: smooth; }}
+body {{
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Aptos", "Segoe UI", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}}
+button, input {{ font: inherit; }}
+a {{ color: inherit; }}
+.shell {{ max-width: var(--content); margin: 0 auto; padding: 0 32px 72px; }}
+.topline {{ height: 10px; background: var(--cobalt); }}
+.masthead {{
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr) 260px;
+  gap: 32px;
+  align-items: end;
+  min-height: 248px;
+  padding: 48px 0 34px;
+  border-bottom: 1px solid var(--ink);
+}}
+.mark {{
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: white;
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -.04em;
+  position: relative;
+}}
+.mark::after {{
+  content: "";
+  position: absolute;
+  right: -9px;
+  bottom: -9px;
+  width: 18px;
+  height: 18px;
+  background: var(--signal);
+}}
+.project-name {{
+  margin: 0;
+  max-width: 960px;
+  font-size: clamp(48px, 6vw, 86px);
+  font-weight: 680;
+  line-height: .91;
+  letter-spacing: -.065em;
+  overflow-wrap: break-word;
+}}
+.project-description {{
+  max-width: 64ch;
+  margin: 24px 0 0;
+  color: #3f4d56;
+  font-size: 17px;
+  line-height: 1.55;
+}}
+.snapshot {{ align-self: stretch; display: flex; flex-direction: column; justify-content: space-between; }}
+.snapshot-state {{ display: flex; align-items: center; gap: 9px; font-weight: 650; }}
+.pulse {{ width: 9px; height: 9px; border-radius: 50%; background: var(--success); }}
+.snapshot-time {{ color: var(--muted); font-size: 13px; max-width: 28ch; }}
+.metrics {{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-bottom: 1px solid var(--ink);
+}}
+.metric {{ padding: 24px 24px 22px 0; min-height: 130px; }}
+.metric + .metric {{ border-left: 1px solid var(--rule); padding-left: 24px; }}
+.metric-value {{ font-size: clamp(34px, 4vw, 56px); font-weight: 650; line-height: 1; letter-spacing: -.045em; }}
+.metric-label {{ margin-top: 10px; color: var(--muted); font-size: 13px; }}
+.workspace {{ display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 64px; padding-top: 48px; }}
+.index {{ align-self: start; position: sticky; top: 28px; }}
+.index-block {{ padding: 0 0 28px; margin-bottom: 28px; border-bottom: 1px solid var(--rule); }}
+.section-title {{ margin: 0 0 17px; font-size: 14px; font-weight: 720; letter-spacing: -.01em; }}
+.stack-list {{ display: flex; flex-wrap: wrap; gap: 7px; }}
+.stack-item {{ padding: 5px 9px; border: 1px solid var(--rule); background: var(--surface); font-size: 12px; }}
+.path-list, .jump-list {{ list-style: none; margin: 0; padding: 0; }}
+.path-list li {{ margin-top: 10px; }}
+code {{ font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }}
+.path-list code {{ color: var(--cobalt); }}
+.jump-list a {{ display: block; padding: 7px 0; color: var(--muted); text-decoration: none; border-bottom: 1px solid transparent; }}
+.jump-list a:hover, .jump-list a:focus-visible {{ color: var(--ink); border-color: var(--ink); outline: none; }}
+.main-column {{ min-width: 0; }}
+.section {{ padding-bottom: 62px; margin-bottom: 54px; border-bottom: 1px solid var(--ink); }}
+.section:last-child {{ margin-bottom: 0; }}
+.section-head {{ display: flex; align-items: baseline; justify-content: space-between; gap: 24px; margin-bottom: 25px; }}
+.section-head h2 {{ margin: 0; font-size: 28px; font-weight: 650; letter-spacing: -.035em; }}
+.section-meta {{ color: var(--muted); font-size: 13px; white-space: nowrap; }}
+.search {{ position: relative; width: min(360px, 100%); }}
+.search input {{
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  padding: 8px 30px 8px 0;
+  outline: none;
+}}
+.search input:focus {{ border-bottom-width: 3px; padding-bottom: 6px; }}
+.search span {{ position: absolute; right: 0; bottom: 8px; color: var(--muted); pointer-events: none; }}
+.module-list {{ border-top: 1px solid var(--ink); }}
+.module-row {{
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(180px, 2fr) 88px;
+  align-items: center;
+  gap: 24px;
+  min-height: 62px;
+  border-bottom: 1px solid var(--soft-rule);
+}}
+.module-name {{ font-weight: 650; overflow-wrap: anywhere; }}
+.bar-track {{ height: 8px; background: #dce3e7; overflow: hidden; }}
+.bar {{ height: 100%; background: var(--cobalt); min-width: 4px; }}
+.file-count {{ text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }}
+.empty {{ padding: 24px 0; color: var(--muted); border-top: 1px solid var(--rule); }}
+.task-list {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--ink); }}
+.task {{ min-height: 130px; padding: 20px 24px 22px 0; border-bottom: 1px solid var(--rule); }}
+.task:nth-child(even) {{ border-left: 1px solid var(--rule); padding-left: 24px; }}
+.task-state {{ color: var(--cobalt); font-size: 12px; font-weight: 700; margin-bottom: 12px; }}
+.task-title {{ font-size: 18px; font-weight: 610; line-height: 1.35; }}
+.task-category {{ margin-top: 8px; color: var(--muted); font-size: 13px; }}
+.decision-list {{ counter-reset: decisions; border-top: 1px solid var(--ink); }}
+.decision {{
+  counter-increment: decisions;
+  display: grid;
+  grid-template-columns: 64px minmax(160px, .8fr) minmax(260px, 1.5fr);
+  gap: 28px;
+  padding: 26px 0;
+  border-bottom: 1px solid var(--rule);
+}}
+.decision::before {{ content: counter(decisions, decimal-leading-zero); color: var(--signal); font-weight: 750; font-variant-numeric: tabular-nums; }}
+.decision-title {{ font-size: 17px; font-weight: 650; line-height: 1.35; }}
+.decision-rationale {{ color: #47545d; max-width: 72ch; }}
+.note-list {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }}
+.note {{ background: var(--surface); padding: 22px; min-height: 110px; }}
+.note-id {{ color: var(--signal); font-size: 12px; font-weight: 700; margin-bottom: 10px; }}
+.changes {{ display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--rule); }}
+.change {{ padding: 17px 20px; background: var(--surface); }}
+.change + .change {{ border-left: 1px solid var(--rule); }}
+.change strong {{ display: block; font-size: 24px; }}
+.change span {{ color: var(--muted); font-size: 12px; }}
+.footer {{ display: flex; justify-content: space-between; gap: 24px; padding-top: 32px; color: var(--muted); font-size: 12px; }}
+.footer strong {{ color: var(--ink); }}
+[hidden] {{ display: none !important; }}
+@media (max-width: 900px) {{
+  .shell {{ padding-inline: 20px; }}
+  .masthead {{ grid-template-columns: 88px minmax(0, 1fr); min-height: auto; }}
+  .snapshot {{ grid-column: 2; gap: 8px; }}
+  .metrics {{ grid-template-columns: repeat(2, 1fr); }}
+  .metric:nth-child(3) {{ border-left: 0; }}
+  .metric:nth-child(n+3) {{ border-top: 1px solid var(--rule); }}
+  .workspace {{ grid-template-columns: 1fr; gap: 30px; }}
+  .index {{ position: static; display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }}
+}}
+@media (max-width: 620px) {{
+  .masthead {{ display: block; padding: 28px 0; }}
+  .mark {{ width: 56px; height: 56px; margin-bottom: 48px; }}
+  .project-name {{ font-size: 48px; }}
+  .snapshot {{ margin-top: 30px; gap: 8px; }}
+  .metrics {{ grid-template-columns: 1fr 1fr; }}
+  .metric {{ min-height: 112px; padding: 18px 12px 18px 0; }}
+  .metric + .metric {{ padding-left: 14px; }}
+  .index {{ display: block; }}
+  .section-head {{ display: block; }}
+  .search {{ margin-top: 18px; }}
+  .module-row {{ grid-template-columns: 1fr 58px; gap: 12px; padding: 12px 0; }}
+  .bar-track {{ grid-column: 1 / -1; grid-row: 2; }}
+  .task-list, .note-list {{ grid-template-columns: 1fr; }}
+  .task:nth-child(even) {{ border-left: 0; padding-left: 0; }}
+  .decision {{ grid-template-columns: 40px 1fr; gap: 14px; }}
+  .decision-rationale {{ grid-column: 2; }}
+  .changes {{ grid-template-columns: 1fr; }}
+  .change + .change {{ border-left: 0; border-top: 1px solid var(--rule); }}
+  .footer {{ display: block; }}
+}}
+@media (prefers-reduced-motion: reduce) {{ html {{ scroll-behavior: auto; }} }}
+</style>
+</head>
+<body>
+<div class="topline"></div>
+<div class="shell">
+  <header class="masthead">
+    <div class="mark" aria-label="Project Memory">PM</div>
+    <div>
+      <h1 class="project-name" id="projectName"></h1>
+      <p class="project-description" id="projectDescription"></p>
+    </div>
+    <div class="snapshot">
+      <div class="snapshot-state"><span class="pulse" aria-hidden="true"></span><span>Memory snapshot ready</span></div>
+      <div class="snapshot-time" id="updated"></div>
+    </div>
+  </header>
+
+  <section class="metrics" aria-label="Project summary">
+    <div class="metric"><div class="metric-value" id="fileCount">0</div><div class="metric-label">Files indexed</div></div>
+    <div class="metric"><div class="metric-value" id="storage">0 KB</div><div class="metric-label">Indexed footprint</div></div>
+    <div class="metric"><div class="metric-value" id="taskCount">0</div><div class="metric-label">Active tasks</div></div>
+    <div class="metric"><div class="metric-value" id="decisionCount">0</div><div class="metric-label">Recorded decisions</div></div>
+  </section>
+
+  <div class="workspace">
+    <aside class="index" aria-label="Project index">
+      <div class="index-block">
+        <h2 class="section-title">Technology</h2>
+        <div class="stack-list" id="stack"></div>
+      </div>
+      <div class="index-block">
+        <h2 class="section-title">Start here</h2>
+        <ul class="path-list" id="entrypoints"></ul>
+      </div>
+      <nav class="index-block" aria-label="Dashboard sections">
+        <h2 class="section-title">Index</h2>
+        <ul class="jump-list">
+          <li><a href="#repository">Repository map</a></li>
+          <li><a href="#work">Active work</a></li>
+          <li><a href="#decisions">Decisions</a></li>
+          <li><a href="#notes">Notes</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-column">
+      <section class="section" id="repository">
+        <div class="section-head">
+          <div><h2>Repository map</h2><div class="section-meta" id="moduleMeta"></div></div>
+          <label class="search"><span aria-hidden="true">⌕</span><input id="moduleSearch" type="search" placeholder="Filter modules" aria-label="Filter repository modules"></label>
+        </div>
+        <div class="module-list" id="modules"></div>
+        <div class="empty" id="moduleEmpty" hidden>No modules match that filter.</div>
+      </section>
+
+      <section class="section" id="work">
+        <div class="section-head"><h2>Active work</h2><div class="section-meta" id="taskMeta"></div></div>
+        <div class="task-list" id="tasks"></div>
+        <div class="empty" id="taskEmpty" hidden>No active tasks. Add one with the memory CLI when follow-up work appears.</div>
+      </section>
+
+      <section class="section" id="decisions">
+        <div class="section-head"><h2>Decision ledger</h2><div class="section-meta">Oldest to newest</div></div>
+        <div class="decision-list" id="decisionList"></div>
+        <div class="empty" id="decisionEmpty" hidden>No decisions recorded yet.</div>
+      </section>
+
+      <section class="section" id="notes">
+        <div class="section-head"><h2>Durable notes</h2><div class="section-meta">Facts worth carrying forward</div></div>
+        <div class="note-list" id="noteList"></div>
+        <div class="empty" id="noteEmpty" hidden>No durable notes recorded yet.</div>
+      </section>
+
+      <section class="section">
+        <div class="section-head"><h2>Since the previous scan</h2></div>
+        <div class="changes">
+          <div class="change"><strong id="addedCount">0</strong><span>Added</span></div>
+          <div class="change"><strong id="changedCount">0</strong><span>Changed</span></div>
+          <div class="change"><strong id="removedCount">0</strong><span>Removed</span></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer"><span><strong>Project Memory</strong> / local-first repository context</span><span>No source code or chat history is displayed.</span></footer>
+</div>
+<script>
+const memory = {payload};
+const byId = id => document.getElementById(id);
+const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[character]));
+const formatBytes = bytes => {{
+  const value = Number(bytes || 0);
+  if (value < 1024) return `${{value}} B`;
+  if (value < 1048576) return `${{(value / 1024).toFixed(value < 10240 ? 1 : 0)}} KB`;
+  return `${{(value / 1048576).toFixed(1)}} MB`;
+}};
+const formatDate = value => {{
+  if (!value) return 'This project has not been scanned yet.';
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf()) ? `Last scanned ${{value}}` : `Last scanned ${{new Intl.DateTimeFormat(undefined, {{dateStyle:'medium', timeStyle:'short'}}).format(date)}}`;
+}};
+
+const project = memory.project || {{}};
+const summary = memory.summary || {{}};
+const architecture = memory.architecture || {{}};
+const activeTasks = (memory.tasks || []).filter(task => !['done','completed','cancelled'].includes(String(task.status || 'pending').toLowerCase()));
+const modules = architecture.modules || [];
+const maxFiles = Math.max(1, ...modules.map(module => Number(module.file_count || 0)));
+
+byId('projectName').textContent = project.name || 'Untitled project';
+byId('projectDescription').textContent = project.description || architecture.overview || 'Project structure, decisions, and active work in one durable index.';
+byId('updated').textContent = formatDate(project.last_scanned);
+byId('fileCount').textContent = Number(summary.file_count || 0).toLocaleString();
+byId('storage').textContent = formatBytes(summary.total_bytes);
+byId('taskCount').textContent = activeTasks.length.toLocaleString();
+byId('decisionCount').textContent = (memory.decisions || []).length.toLocaleString();
+
+const stack = project.tech_stack || [];
+byId('stack').innerHTML = stack.length ? stack.map(item => `<span class="stack-item">${{escapeHtml(item)}}</span>`).join('') : '<span class="section-meta">Not detected</span>';
+const entrypoints = memory.entrypoints || [];
+byId('entrypoints').innerHTML = entrypoints.length ? entrypoints.map(path => `<li><code>${{escapeHtml(path)}}</code></li>`).join('') : '<li class="section-meta">No entrypoints detected</li>';
+
+function renderModules(query = '') {{
+  const normalized = query.trim().toLowerCase();
+  const visible = modules.filter(module => String(module.name || '').toLowerCase().includes(normalized));
+  byId('modules').innerHTML = visible.map(module => {{
+    const count = Number(module.file_count || 0);
+    const width = Math.max(2, (count / maxFiles) * 100);
+    return `<div class="module-row"><div class="module-name">${{escapeHtml(module.name)}}</div><div class="bar-track" aria-hidden="true"><div class="bar" style="width:${{width}}%"></div></div><div class="file-count">${{count.toLocaleString()}} files</div></div>`;
+  }}).join('');
+  byId('moduleMeta').textContent = `${{visible.length}} of ${{modules.length}} modules`;
+  byId('moduleEmpty').hidden = visible.length !== 0;
+}}
+renderModules();
+byId('moduleSearch').addEventListener('input', event => renderModules(event.target.value));
+
+byId('taskMeta').textContent = `${{activeTasks.length}} open`;
+byId('tasks').innerHTML = activeTasks.map(task => `<article class="task"><div class="task-state">${{escapeHtml(task.status || 'pending')}}</div><div class="task-title">${{escapeHtml(task.title)}}</div><div class="task-category">${{escapeHtml(task.category || 'General')}}</div></article>`).join('');
+byId('taskEmpty').hidden = activeTasks.length !== 0;
+
+const decisions = memory.decisions || [];
+byId('decisionList').innerHTML = decisions.map(decision => `<article class="decision"><div class="decision-title">${{escapeHtml(decision.title)}}</div><div class="decision-rationale">${{escapeHtml(decision.rationale)}}</div></article>`).join('');
+byId('decisionEmpty').hidden = decisions.length !== 0;
+
+const notes = memory.notes || [];
+byId('noteList').innerHTML = notes.map(note => `<article class="note"><div class="note-id">Note ${{escapeHtml(note.id)}}</div><div>${{escapeHtml(note.text)}}</div></article>`).join('');
+byId('noteEmpty').hidden = notes.length !== 0;
+
+const changes = summary.changes || {{}};
+byId('addedCount').textContent = (changes.added || []).length.toLocaleString();
+byId('changedCount').textContent = (changes.changed || []).length.toLocaleString();
+byId('removedCount').textContent = (changes.removed || []).length.toLocaleString();
+</script>
+</body>
+</html>'''

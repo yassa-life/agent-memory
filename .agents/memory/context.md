@@ -1,6 +1,6 @@
 # Project Memory: Antigravity_memeory
 
-> Generated 2026-11-07T15:46:32+05:30. Read this before exploring the repository.
+> Generated 2026-11-08T11:39:53+05:30. Read this before exploring the repository.
 
 Portable project memory for AI coding agents. It indexes repository structure, preserves decisions and tasks, and generates compact context so agents avoid repeated full-project exploration.
 
@@ -19,7 +19,7 @@ Python
 
 ## Repository Map
 
-- **.agents** — 9 files; e.g. `.agents/hooks.json`, `.agents/memory/global_memory_scanner.py`, `.agents/memory/memory_hook.py`
+- **.agents** — 7 files; e.g. `.agents/hooks.json`, `.agents/memory/memory_hook.py`, `.agents/memory/memory_manager.py`
 - **root** — 5 files; e.g. `.gitignore`, `AGENTS.md`, `GEMINI.md`
 - **tests** — 1 files; e.g. `tests/test_memory_manager.py`
 
