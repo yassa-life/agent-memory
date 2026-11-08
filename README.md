@@ -60,6 +60,14 @@ python .agents/memory/memory_manager.py track-project D:\path\to\project
 
 The command embeds a metadata-only snapshot in the current dashboard. Use the **Project** selector below the dashboard metrics to switch its graph, history, tasks, decisions, agents, and chats. Re-run `track-project` when the other project's memory changes.
 
+Synchronize many projects from a local integration manifest, such as a Codex project export:
+
+```text
+python .agents/memory/memory_manager.py sync-projects .agents/memory/codex_projects.local.json
+```
+
+Duplicate paths are removed automatically. Projects that have not initialized Agent Memory still appear in the selector with an empty-state snapshot. Local manifests and generated dashboards are Git-ignored because they contain machine-specific paths.
+
 Import chat metadata with an explicit summary:
 
 ```text

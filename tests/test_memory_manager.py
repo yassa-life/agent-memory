@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -100,6 +101,20 @@ class ProjectMemoryTests(unittest.TestCase):
             self.assertIn("graph", record["snapshot"])
             self.assertNotIn("files", record["snapshot"])
             self.assertNotIn("projects", record["snapshot"])
+
+    def test_syncs_and_deduplicates_project_manifest(self):
+        memory_manager.scan(self.root)
+        with tempfile.TemporaryDirectory() as other_temp:
+            other = Path(other_temp)
+            manifest = self.root / "projects.local.json"
+            manifest.write_text(json.dumps({"projects": [
+                {"projectId": "one", "label": "First label", "path": str(other)},
+                {"projectId": "two", "label": "Updated label", "path": str(other)},
+            ]}), encoding="utf-8")
+            records = memory_manager.sync_projects(self.root, manifest)
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0]["name"], "Updated label")
+            self.assertIn("snapshot", records[0])
 
 
 if __name__ == "__main__":

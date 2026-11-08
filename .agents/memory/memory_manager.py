@@ -265,16 +265,41 @@ def import_chat(root: Path, source: Path, agent: str, title: str, summary: str, 
     return add_record(root, "chats", {"title": title, "agent": agent, "summary": summary, "source": str(source), "source_bytes": stat.st_size, "line_count": line_count, "created_at": created_at or datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat(timespec="seconds"), "imported_at": now_iso()})
 
 
-def track_project(root: Path, project_path: Path, description: str = "") -> dict[str, Any]:
+def track_project(root: Path, project_path: Path, description: str = "", display_name: str | None = None, source: str = "manual", source_id: str | None = None) -> dict[str, Any]:
     project_path = project_path.resolve()
     if not project_path.is_dir(): raise SystemExit(f"Project directory not found: {project_path}")
     target = load_memory(project_path)
     target_project, target_summary = target.get("project", {}), target.get("summary", {})
+    if not target:
+        target = default_memory(project_path)
+        target["project"]["display_name"] = display_name or project_path.name
+        target["project"]["description"] = description or "Agent Memory is not initialized in this project yet."
+        target["summary"] = {"file_count": 0, "edge_count": 0, "connected_files": 0, "total_bytes": 0, "changes": {"added": [], "changed": [], "removed": []}}
+        target_project, target_summary = target["project"], target["summary"]
     data = load_memory(root) or scan(root)
     projects = [item for item in data.get("projects", []) if Path(item.get("path", "")).resolve() != project_path]
     snapshot = {key: target.get(key) for key in ("schema_version", "project", "summary", "architecture", "entrypoints", "graph", "history", "agents", "chats", "decisions", "tasks", "notes")}
-    record = {"id": re.sub(r"[^a-z0-9]+", "-", project_path.name.lower()).strip("-") or f"project-{len(projects)+1}", "name": target_project.get("display_name") or target_project.get("name") or project_path.name, "path": str(project_path), "description": description or target_project.get("description", ""), "last_scanned": target_project.get("last_scanned"), "file_count": target_summary.get("file_count", 0), "edge_count": target_summary.get("edge_count", 0), "tracked_at": now_iso(), "is_current": project_path == root, "snapshot": snapshot}
+    record = {"id": re.sub(r"[^a-z0-9]+", "-", (source_id or project_path.name).lower()).strip("-") or f"project-{len(projects)+1}", "name": display_name or target_project.get("display_name") or target_project.get("name") or project_path.name, "path": str(project_path), "description": description or target_project.get("description", ""), "last_scanned": target_project.get("last_scanned"), "file_count": target_summary.get("file_count", 0), "edge_count": target_summary.get("edge_count", 0), "tracked_at": now_iso(), "source": source, "source_id": source_id, "is_current": project_path == root, "snapshot": snapshot}
     projects.append(record); data["projects"] = sorted(projects, key=lambda item: item["name"].lower()); save_memory(root, data); return record
+
+
+def sync_projects(root: Path, manifest: Path) -> list[dict[str, Any]]:
+    try:
+        payload = json.loads(manifest.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SystemExit(f"Cannot read project manifest {manifest}: {exc}") from exc
+    entries = payload.get("projects", payload if isinstance(payload, list) else [])
+    if not isinstance(entries, list): raise SystemExit("Project manifest must contain a projects list")
+    unique: dict[str, dict[str, Any]] = {}
+    for entry in entries:
+        if not isinstance(entry, dict) or not entry.get("path"): continue
+        path = Path(entry["path"]).resolve()
+        if not path.is_dir(): continue
+        unique[os.path.normcase(str(path))] = entry
+    records = []
+    for entry in unique.values():
+        records.append(track_project(root, Path(entry["path"]), display_name=entry.get("label"), source=entry.get("source", "manifest"), source_id=entry.get("projectId")))
+    return records
 
 
 def render_context(data: dict[str, Any]) -> str:
@@ -327,6 +352,7 @@ def build_parser() -> argparse.ArgumentParser:
     custom_agent = sub.add_parser("register-agent", help="connect any other agent using its project instruction file"); custom_agent.add_argument("name"); custom_agent.add_argument("--instructions", required=True, help="instruction file path inside the project")
     chat = sub.add_parser("import-chat", help="track chat metadata and an explicit summary without copying transcript text"); chat.add_argument("source", type=Path); chat.add_argument("--agent", required=True); chat.add_argument("--title", required=True); chat.add_argument("--summary", required=True); chat.add_argument("--date")
     project = sub.add_parser("track-project", help="add another project to this memory dashboard"); project.add_argument("path", type=Path); project.add_argument("--description", default="")
+    sync = sub.add_parser("sync-projects", help="import and deduplicate projects from a JSON manifest"); sync.add_argument("manifest", type=Path)
     serve = sub.add_parser("serve"); serve.add_argument("--port", type=int, default=28492)
     return parser
 
@@ -353,6 +379,8 @@ def main(argv: list[str] | None = None) -> int:
         record = import_chat(root, args.source, args.agent, args.title, args.summary, args.date); print(f"Imported chat metadata #{record['id']}: {record['title']}")
     elif command == "track-project":
         record = track_project(root, args.path, args.description); print(f"Tracking {record['name']}: {record['path']}")
+    elif command == "sync-projects":
+        records = sync_projects(root, args.manifest); print(f"Synchronized {len(records)} unique projects")
     elif command == "serve":
         from server import run_server
         run_server(port=args.port)
